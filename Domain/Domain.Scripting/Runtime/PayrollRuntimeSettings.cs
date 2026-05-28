@@ -10,8 +10,8 @@ public class PayrollRuntimeSettings : RuntimeSettings
     /// <summary>The payroll culture</summary>
     public string PayrollCulture { get; init; }
 
-    /// <summary>The namespace</summary>
-    public string Namespace { get; init; }
+    /// <summary>The regulation namespace for field name resolution</summary>
+    public string Namespace { get; set; }
 
     /// <summary>The case value provider</summary>
     public ICaseValueProvider CaseValueProvider { get; init; }

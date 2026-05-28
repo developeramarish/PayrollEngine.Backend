@@ -114,17 +114,28 @@ public class DerivedCaseBuilder : DerivedCaseTool
         var caseSlot = caseChangeSetup.Case?.CaseSlot;
         var caseSet = await GetDerivedCaseSetAsync(cases, caseSlot, caseChangeSetup, culture, true);
 
+        // derived regulations for namespace resolution in case scripts
+        var derivedRegulations = (await PayrollRepository.GetDerivedRegulationsAsync(
+            Settings.DbContext,
+            new()
+            {
+                TenantId = Tenant.Id,
+                PayrollId = Payroll.Id,
+                RegulationDate = RegulationDate,
+                EvaluationDate = EvaluationDate
+            })).ToList();
+
         // resolve case: start of recursion
-        await BuildCaseAsync(cases, caseSet, caseChangeSetup, culture);
+        await BuildCaseAsync(cases, caseSet, caseChangeSetup, culture, derivedRegulations);
 
         return caseSet;
     }
 
     // entry point to resolve recursive
     private async Task<bool> BuildCaseAsync(IList<Case> cases, CaseSet caseSet,
-        CaseChangeSetup caseChangeSetup, string culture)
+        CaseChangeSetup caseChangeSetup, string culture, IList<Regulation> derivedRegulations)
     {
-        var build = CaseBuild(cases, caseSet);
+        var build = CaseBuild(cases, caseSet, derivedRegulations);
         if (!build)
         {
             Log.Trace($"Build failed for case {caseSet.Name}");
@@ -183,7 +194,7 @@ public class DerivedCaseBuilder : DerivedCaseTool
             var targetCaseSet = await GetDerivedCaseSetAsync(targetCases, targetRelation.Key.TargetCaseSlot, caseChangeSetup, culture, true);
 
             // build case relation
-            if (!CaseRelationBuild(targetRelation.ToList(), caseSet, targetCaseSet))
+            if (!CaseRelationBuild(targetRelation.ToList(), caseSet, targetCaseSet, derivedRegulations))
             {
                 Log.Trace($"Ignoring case relation from {caseSet.Name} to {targetCaseSet.Name}");
                 continue;
@@ -211,7 +222,7 @@ public class DerivedCaseBuilder : DerivedCaseTool
             }
 
             // process related case (recursive)
-            if (await BuildCaseAsync(targetCases, targetCaseSet, caseChangeSetup, culture))
+            if (await BuildCaseAsync(targetCases, targetCaseSet, caseChangeSetup, culture, derivedRegulations))
             {
                 // add related case (ignore invalid case)
                 caseSet.RelatedCases.Add(targetCaseSet);
@@ -222,7 +233,7 @@ public class DerivedCaseBuilder : DerivedCaseTool
         return true;
     }
 
-    private bool CaseBuild(IEnumerable<Case> cases, CaseSet caseSet)
+    private bool CaseBuild(IEnumerable<Case> cases, CaseSet caseSet, IList<Regulation> derivedRegulations)
     {
         var lookupProvider = NewRegulationLookupProvider();
 
@@ -250,6 +261,13 @@ public class DerivedCaseBuilder : DerivedCaseTool
 
         foreach (var buildScripts in cases.GetDerivedExpressionObjects(x => x.BuildScript))
         {
+            // resolve namespace from the regulation that owns this case
+            if (buildScripts is DerivedCase derivedCase)
+            {
+                settings.Namespace = derivedRegulations.FirstOrDefault(
+                    x => x.Id == derivedCase.RegulationId)?.Namespace;
+            }
+
             var caseBuild = new CaseScriptController().CaseBuild(buildScripts, settings);
             if (caseBuild.HasValue)
             {
@@ -267,7 +285,8 @@ public class DerivedCaseBuilder : DerivedCaseTool
         return build;
     }
 
-    private bool CaseRelationBuild(IEnumerable<CaseRelation> derivedCaseRelation, CaseSet sourceCaseSet, CaseSet targetCaseSet)
+    private bool CaseRelationBuild(IEnumerable<CaseRelation> derivedCaseRelation, CaseSet sourceCaseSet,
+        CaseSet targetCaseSet, IList<Regulation> derivedRegulations)
     {
         var lookupProvider = NewRegulationLookupProvider();
 
@@ -293,6 +312,13 @@ public class DerivedCaseBuilder : DerivedCaseTool
         // case relation build scripts
         foreach (var buildScripts in derivedCaseRelation.GetDerivedExpressionObjects(x => x.BuildScript))
         {
+            // resolve namespace from the regulation that owns this relation
+            if (buildScripts is DerivedCaseRelation derivedRelation)
+            {
+                settings.Namespace = derivedRegulations.FirstOrDefault(
+                    x => x.Id == derivedRelation.RegulationId)?.Namespace;
+            }
+
             var build = new CaseRelationScriptController().CaseRelationBuild(buildScripts, settings);
             if (build.HasValue)
             {

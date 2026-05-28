@@ -155,10 +155,21 @@ public class DerivedCaseValidator : DerivedCaseTool
             caseSet.SetCancellationDate(cancellationDate);
         }
 
+        // derived regulations for namespace resolution in case scripts
+        var derivedRegulations = (await PayrollRepository.GetDerivedRegulationsAsync(
+            Settings.DbContext,
+            new()
+            {
+                TenantId = Tenant.Id,
+                PayrollId = Payroll.Id,
+                RegulationDate = RegulationDate,
+                EvaluationDate = EvaluationDate
+            })).ToList();
+
         // support unknown related cases only in cancellation mode
         var ignoreUnknownRelations = cancellationDate == null;
         // resolve case: start of recursion
-        await ValidateCaseAsync(cases, caseSet, caseChangeSetup, issues, null, ignoreUnknownRelations);
+        await ValidateCaseAsync(cases, caseSet, caseChangeSetup, issues, null, ignoreUnknownRelations, derivedRegulations);
 
         // apply runtime case values
         var fields = caseSet.CollectFields();
@@ -400,10 +411,11 @@ public class DerivedCaseValidator : DerivedCaseTool
 
     // entry point to resolve recursive 
     private async Task ValidateCaseAsync(IList<Case> cases, CaseSet caseSet,
-        CaseChangeSetup caseChangeSetup, List<CaseValidationIssue> issues, string culture, bool ignoreUnknownRelations)
+        CaseChangeSetup caseChangeSetup, List<CaseValidationIssue> issues, string culture,
+        bool ignoreUnknownRelations, IList<Regulation> derivedRegulations)
     {
         // case validation
-        CaseValidate(cases, caseSet, issues);
+        CaseValidate(cases, caseSet, issues, derivedRegulations);
 
         // case relations (active only)
         var relations = (await GetCachedDerivedCaseRelationsAsync(
@@ -442,10 +454,11 @@ public class DerivedCaseValidator : DerivedCaseTool
             targetCaseSet.CancellationDate = caseSet.CancellationDate;
 
             // validate case relation
-            if (CaseRelationValidate(targetRelation.ToList(), caseSet, targetCaseSet, issues))
+            if (CaseRelationValidate(targetRelation.ToList(), caseSet, targetCaseSet, issues, derivedRegulations))
             {
                 // process related case (recursive)
-                await ValidateCaseAsync(targetCase, targetCaseSet, caseChangeSetup, issues, culture, ignoreUnknownRelations);
+                await ValidateCaseAsync(targetCase, targetCaseSet, caseChangeSetup, issues, culture,
+                    ignoreUnknownRelations, derivedRegulations);
             }
         }
 
@@ -480,7 +493,7 @@ public class DerivedCaseValidator : DerivedCaseTool
     }
 
     private void CaseValidate(IEnumerable<Case> cases, CaseSet caseSet,
-        List<CaseValidationIssue> caseIssues)
+        List<CaseValidationIssue> caseIssues, IList<Regulation> derivedRegulations)
     {
         var lookupProvider = NewRegulationLookupProvider();
 
@@ -506,6 +519,13 @@ public class DerivedCaseValidator : DerivedCaseTool
         // case validate expression
         foreach (var validateScripts in cases.GetDerivedExpressionObjects(x => x.ValidateScript))
         {
+            // resolve namespace from the regulation that owns this case
+            if (validateScripts is DerivedCase derivedCase)
+            {
+                settings.Namespace = derivedRegulations.FirstOrDefault(
+                    x => x.Id == derivedCase.RegulationId)?.Namespace;
+            }
+
             // issues may be added by the script
             var issues = new List<CaseValidationIssue>();
             var valid = new CaseScriptController().CaseValidate(validateScripts, settings, issues);
@@ -535,7 +555,7 @@ public class DerivedCaseValidator : DerivedCaseTool
     }
 
     private bool CaseRelationValidate(IEnumerable<CaseRelation> derivedCaseRelation, CaseSet sourceCaseSet,
-        CaseSet targetCaseSet, List<CaseValidationIssue> caseRelationIssues)
+        CaseSet targetCaseSet, List<CaseValidationIssue> caseRelationIssues, IList<Regulation> derivedRegulations)
     {
         var lookupProvider = NewRegulationLookupProvider();
 
@@ -561,6 +581,13 @@ public class DerivedCaseValidator : DerivedCaseTool
         // case relation validate scripts
         foreach (var validateScripts in derivedCaseRelation.GetDerivedExpressionObjects(x => x.ValidateScript))
         {
+            // resolve namespace from the regulation that owns this relation
+            if (validateScripts is DerivedCaseRelation derivedRelation)
+            {
+                settings.Namespace = derivedRegulations.FirstOrDefault(
+                    x => x.Id == derivedRelation.RegulationId)?.Namespace;
+            }
+
             // issues may be added by the script
             var issues = new List<CaseValidationIssue>();
             var valid = new CaseRelationScriptController().CaseRelationValidate(validateScripts, settings, issues);
