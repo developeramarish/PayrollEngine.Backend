@@ -40,7 +40,9 @@ public class CaseFieldRepository(IRegulationRepository regulationRepository, ICa
             .Join(Tables.Regulation,
                 GetColumnName(Tables.Case, CaseColumn.RegulationId),
                 GetIdColumnName(Tables.Regulation))
-            .Where(RegulationColumn.TenantId, tenantId)
+            .Where(q => q
+                .Where(RegulationColumn.TenantId, tenantId)
+                .OrWhere(RegulationColumn.SharedRegulation, true))
             .WhereIn(GetColumnName(CaseFieldColumn.Name), caseFieldNames);
 
         if (regulationId.HasValue)

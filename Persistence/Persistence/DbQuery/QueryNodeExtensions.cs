@@ -125,7 +125,7 @@ internal static class QueryNodeExtensions
             // constant collection
             if (node.Kind == QueryNodeKind.CollectionConstant)
             {
-                return ((CollectionConstantNode)node).Collection.Select(_ => node.GetConstantValue(columnName, columnType));
+                return ((CollectionConstantNode)node).Items.Select(_ => node.GetConstantValue(columnName, columnType));
             }
 
             return null;

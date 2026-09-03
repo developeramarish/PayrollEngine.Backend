@@ -281,7 +281,7 @@ internal sealed class FilterClauseBuilder : QueryNodeVisitor<SqlKata.Query>
 
         if (nodeIn.Right is CollectionConstantNode collection)
         {
-            var values = collection.Collection
+            var values = collection.Items
                 .Select(item => columnType != null
                     ? item.GetConstantValue(column, columnType)
                     : item.GetConstantValue())

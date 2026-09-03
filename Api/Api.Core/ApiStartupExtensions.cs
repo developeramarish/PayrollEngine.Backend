@@ -236,7 +236,7 @@ public static class ApiStartupExtensions
                 var defaultVersion = BackendSpecification.DefaultApiVersion;
                 setupAction.DefaultApiVersion = new(defaultVersion.Major, defaultVersion.Minor);
                 setupAction.ReportApiVersions = true;
-            });
+            }).AddMvc();
 
         // CORS (only when at least one origin is configured)
         var cors = serverConfiguration.Cors;

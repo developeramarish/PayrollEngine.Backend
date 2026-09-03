@@ -30,7 +30,9 @@ public class CaseRepository(IRegulationRepository regulationRepository,
             .Join(Tables.Regulation,
                 GetColumnName(CaseColumn.RegulationId),
                 GetIdColumnName(Tables.Regulation))
-            .Where(RegulationColumn.TenantId, tenantId)
+            .Where(q => q
+                .Where(RegulationColumn.TenantId, tenantId)
+                .OrWhere(RegulationColumn.SharedRegulation, true))
             .Where(GetColumnName(CaseColumn.Name), caseName);
 
         if (regulationId.HasValue)
