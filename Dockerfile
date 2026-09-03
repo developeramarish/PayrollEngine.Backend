@@ -21,6 +21,7 @@ COPY ["Domain/Domain.Scripting/PayrollEngine.Domain.Scripting.csproj", "Domain/D
 COPY ["Persistence/Persistence/PayrollEngine.Persistence.csproj", "Persistence/Persistence/"]
 COPY ["Persistence/Persistence.DbQuery.Tests/PayrollEngine.Persistence.DbQuery.Tests.csproj", "Persistence/Persistence.DbQuery.Tests/"]
 COPY ["Persistence/Persistence.MySql/PayrollEngine.Persistence.MySql.csproj", "Persistence/Persistence.MySql/"]
+COPY ["Persistence/Persistence.Postgres/PayrollEngine.Persistence.Postgres.csproj", "Persistence/Persistence.Postgres/"]
 COPY ["Persistence/Persistence.SqlServer/PayrollEngine.Persistence.SqlServer.csproj", "Persistence/Persistence.SqlServer/"]
 
 # copy Directory.Build.props files
@@ -61,4 +62,6 @@ WORKDIR /app
 COPY --from=build /app/publish .
 COPY Database/Create-Model.sql /sql/ModelCreate.sql
 COPY Database/Update-Model.sql /sql/ModelUpdate.sql
+COPY Database/Create-Model.pg.sql /sql/ModelCreate.pg.sql
+COPY Database/Create-Model.mysql.sql /sql/ModelCreate.mysql.sql
 ENTRYPOINT ["dotnet", "PayrollEngine.Backend.Server.dll"]

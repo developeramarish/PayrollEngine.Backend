@@ -35,6 +35,14 @@ public static class Program
             .AddUserSecrets(typeof(Program).Assembly, optional: true)
             .Build();
 
+        // Npgsql 6+: DateTime values must be UTC unless legacy timestamp behaviour is enabled.
+        // Enable only when PostgreSQL is the configured provider to avoid side effects on other providers.
+        if (string.Equals(bootstrapConfig["PayrollServerConfiguration:DbProvider"], "postgres",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        }
+
         SysLog.Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(bootstrapConfig)
             .CreateBootstrapLogger();

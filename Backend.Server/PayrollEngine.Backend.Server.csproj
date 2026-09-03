@@ -26,6 +26,7 @@
 		<ProjectReference Include="..\Backend.Controller\PayrollEngine.Backend.Controller.csproj" />
 		<ProjectReference Include="..\Persistence\Persistence.SqlServer\PayrollEngine.Persistence.SqlServer.csproj" />
 		<ProjectReference Include="..\Persistence\Persistence.MySql\PayrollEngine.Persistence.MySql.csproj" />
+		<ProjectReference Include="..\Persistence\Persistence.Postgres\PayrollEngine.Persistence.Postgres.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

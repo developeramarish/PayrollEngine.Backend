@@ -48,6 +48,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PayrollEngine.Persistence.D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayrollEngine.Persistence.MySql", "Persistence\Persistence.MySql\PayrollEngine.Persistence.MySql.csproj", "{72B46E93-6780-96ED-F1CC-D2DD88785F5A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PayrollEngine.Persistence.Postgres", "Persistence\Persistence.Postgres\PayrollEngine.Persistence.Postgres.csproj", "{B3C4D5E6-F7A8-B9C0-D1E2-F3A4B5C6D7E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -110,6 +112,10 @@ Global
 		{72B46E93-6780-96ED-F1CC-D2DD88785F5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72B46E93-6780-96ED-F1CC-D2DD88785F5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72B46E93-6780-96ED-F1CC-D2DD88785F5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3C4D5E6-F7A8-B9C0-D1E2-F3A4B5C6D7E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3C4D5E6-F7A8-B9C0-D1E2-F3A4B5C6D7E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3C4D5E6-F7A8-B9C0-D1E2-F3A4B5C6D7E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3C4D5E6-F7A8-B9C0-D1E2-F3A4B5C6D7E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -127,6 +133,7 @@ Global
 		{E568C91A-A8D2-4E56-BACA-4D9432000B80} = {EB9B0ECE-BA18-4C36-B6C4-D5126E7D001D}
 		{3F4E5D6C-7B8A-9C0D-1E2F-3A4B5C6D7E8F} = {EB9B0ECE-BA18-4C36-B6C4-D5126E7D001D}
 		{72B46E93-6780-96ED-F1CC-D2DD88785F5A} = {EB9B0ECE-BA18-4C36-B6C4-D5126E7D001D}
+		{B3C4D5E6-F7A8-B9C0-D1E2-F3A4B5C6D7E8} = {EB9B0ECE-BA18-4C36-B6C4-D5126E7D001D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {01864D44-5949-42DD-AFFF-B48E0E7DC141}

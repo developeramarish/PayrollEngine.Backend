@@ -57,6 +57,10 @@ public class Startup
             "mysql" => new Persistence.MySql.DbContext(
                 connectionString: connectionString,
                 defaultCommendTimeout: Convert.ToInt32(serverConfiguration.DbCommandTimeout.TotalSeconds)),
+            "postgres" => new Persistence.Postgres.DbContext(
+                connectionString: connectionString,
+                defaultCommendTimeout: Convert.ToInt32(serverConfiguration.DbCommandTimeout.TotalSeconds),
+                collation: serverConfiguration.DbCollation),
             _ => new Persistence.SqlServer.DbContext(
                 connectionString: connectionString,
                 defaultCommendTimeout: Convert.ToInt32(serverConfiguration.DbCommandTimeout.TotalSeconds),

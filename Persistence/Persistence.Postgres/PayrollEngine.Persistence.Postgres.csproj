@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>PayrollEngine.Persistence.Postgres</AssemblyName>
+		<RootNamespace>PayrollEngine.Persistence.Postgres</RootNamespace>
+		<Description>Payroll Engine Persistence PostgreSQL</Description>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Npgsql" Version="9.0.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Persistence\PayrollEngine.Persistence.csproj" />
+	</ItemGroup>
+
+</Project>
