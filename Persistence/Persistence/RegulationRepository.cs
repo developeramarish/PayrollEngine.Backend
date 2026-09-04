@@ -1,4 +1,7 @@
-﻿using System.Data;
+﻿using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
 using PayrollEngine.Domain.Model;
 using PayrollEngine.Domain.Model.Repository;
 using PayrollEngine.Persistence.DbSchema;
@@ -9,6 +12,30 @@ namespace PayrollEngine.Persistence;
 public class RegulationRepository() : ChildDomainRepository<Regulation>(Tables.Regulation,
     RegulationColumn.TenantId), IRegulationRepository
 {
+    /// <inheritdoc />
+    /// Cross-tenant regulation access: also return regulations with SharedRegulation=true
+    /// so tenants that consume regulations via RegulationShare can resolve them by name
+    /// (e.g. pecmd Report command, regulation-by-name lookup in ReportCommand).
+    ///
+    /// Correct parenthesization: WHERE [OData filters] AND (TenantId=@parentId OR SharedRegulation=1)
+    /// Mirrors the fix applied to CaseRepository and CaseFieldRepository.
+    public override async Task<IEnumerable<Regulation>> QueryAsync(IDbContext context, int parentId, Query query = null)
+    {
+        // Build base query with OData filters but WITHOUT the parent TenantId filter
+        var dbQuery = DbQueryFactory.NewQuery<Regulation>(context, TableName, query);
+
+        // Add parenthesized OR so the name filter (when present) applies to both sides:
+        // WHERE Name='US.Payroll' AND (TenantId=@parentId OR SharedRegulation=1)
+        dbQuery.Where(q => q
+            .Where(ParentFieldName, parentId)
+            .OrWhere(RegulationColumn.SharedRegulation, true));
+
+        var compileQuery = CompileQuery(dbQuery, context);
+        var items = (await QueryAsync<Regulation>(context, compileQuery)).ToList();
+        await OnRetrieved(context, parentId, items);
+        return items;
+    }
+
     protected override void GetObjectCreateData(Regulation regulation, DbParameterCollection parameters)
     {
         parameters.Add(nameof(regulation.SharedRegulation), regulation.SharedRegulation);
