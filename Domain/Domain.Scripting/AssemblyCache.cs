@@ -83,6 +83,14 @@ public class AssemblyCache
             loadContext.LoadFromBinary(binary);
 
         /// <summary>
+        /// Searches the load context for an already-loaded assembly by name.
+        /// Used to recover when the Assemblies cache is out of sync with the
+        /// context (e.g. after a CacheUpdate eviction without context disposal).
+        /// </summary>
+        internal Assembly FindAssembly(string name) =>
+            loadContext.Assemblies.FirstOrDefault(a => a.GetName().Name == name);
+
+        /// <summary>
         /// Unloads the underlying collectible context, releasing all
         /// assemblies that belong to this tenant.
         /// </summary>
@@ -324,7 +332,7 @@ public class AssemblyCache
 
             LogStopwatch.Start(nameof(GetObjectAssembly));
 
-            Assembly assembly;
+            Assembly assembly = null;
             if (CacheEnabled)
             {
                 // Retrieve or create the dedicated load context for this tenant.
@@ -339,15 +347,36 @@ public class AssemblyCache
                 }
                 catch (Exception ex)
                 {
-                    // The tenant load context is in an undefined state (e.g. the same
-                    // assembly name was already loaded into it after a ScriptPublish
-                    // without a backend restart). Evict the broken context so the next
-                    // request gets a fresh one and can recover automatically.
-                    CacheClearTenant(tenantId);
-                    throw new PayrollException(
-                        $"Failed to load script assembly for tenant {tenantId}, type {type.Name}. " +
-                        $"The tenant assembly cache has been cleared — retry the operation. " +
-                        $"({ex.GetBaseMessage()})", ex);
+                    // Recovery path: if the assembly is already in this context
+                    // (cache/context desync caused by CacheUpdate evicting the
+                    // Assemblies entry without disposing the TenantContext), re-use
+                    // the existing loaded instance instead of clearing everything.
+                    // Assembly name pattern: {tenantId}_{scriptHash}_{type.FullName}
+                    if (ex is System.IO.FileLoadException &&
+                        ex.Message.Contains("already loaded", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var expectedName = $"{tenantId}_{key.Item3}_{type.FullName}";
+                        assembly = tenantContext.FindAssembly(expectedName);
+                        if (assembly != null)
+                        {
+                            Assemblies.TryAdd(key, new AssemblyRuntime(assembly));
+                            Log.Warning(
+                                $"Tenant {tenantId}: assembly '{expectedName}' already in context " +
+                                "(cache/context desync) — recovered without context eviction.");
+                        }
+                    }
+
+                    // If recovery did not yield an assembly, the context is in an
+                    // undefined state (e.g. after a ScriptPublish without backend restart).
+                    // Evict the broken context so the next request gets a fresh one.
+                    if (assembly == null)
+                    {
+                        CacheClearTenant(tenantId);
+                        throw new PayrollException(
+                            $"Failed to load script assembly for tenant {tenantId}, type {type.Name}. " +
+                            $"The tenant assembly cache has been cleared — retry the operation. " +
+                            $"({ex.GetBaseMessage()})", ex);
+                    }
                 }
             }
             else
@@ -462,6 +491,25 @@ public class AssemblyCache
         }
 
         Log.Information($"Cache update: removed {removed} expired assemblies (threshold={threshold:O}).");
+
+        // Dispose TenantContexts whose every assembly was evicted above.
+        // This keeps contexts in sync with the Assemblies cache and prevents
+        // the "Assembly with same name is already loaded" error that occurs
+        // when a cache miss finds a stale context that still holds the assembly.
+        if (removed > 0)
+        {
+            var remainingTenantIds = Assemblies.Keys.Select(k => k.Item1).ToHashSet();
+            foreach (var orphanId in TenantContexts.Keys
+                         .Where(id => !remainingTenantIds.Contains(id))
+                         .ToList())
+            {
+                if (TenantContexts.TryRemove(orphanId, out var orphanCtx))
+                {
+                    orphanCtx.Dispose();
+                    Log.Information($"Tenant {orphanId}: load context disposed (all assemblies evicted).");
+                }
+            }
+        }
     }
 
     /// <summary>Disposes and removes all tenant load contexts.</summary>
