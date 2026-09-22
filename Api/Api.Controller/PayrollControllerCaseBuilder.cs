@@ -799,7 +799,11 @@ internal sealed class PayrollControllerCaseBuilder
         {
             var regulationCaseName = caseFieldName.EnsureNamespace(regulation.Namespace);
             var regulationCases = await Context.CaseFieldService.GetRegulationCaseFieldsAsync(context, tenantId, [regulationCaseName]);
-            if (regulationCases != null)
+            // Note: GetRegulationCaseFieldsAsync returns an empty enumerable (never null) when not found.
+            // Use Any() to distinguish "found" from "not found" — a plain != null check always succeeds
+            // and would cause the first regulation's namespace to be applied regardless of whether the
+            // field actually exists in that namespace (e.g. L2 "Apex" namespace applied to L1 "US.SSN").
+            if (regulationCases?.Any() == true)
             {
                 caseFieldNamespaceCache?.TryAdd(caseFieldName, regulationCaseName);
                 return regulationCaseName;
