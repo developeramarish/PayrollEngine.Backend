@@ -1,4 +1,4 @@
--- =============================================================================
+﻿-- =============================================================================
 -- Create-Model.mysql.sql
 -- Creates the PayrollEngine database for MySQL 8.0+ (8.4 LTS recommended).
 --
@@ -1505,66 +1505,6 @@ USE PayrollEngine;
 
 SET GLOBAL log_bin_trust_function_creators = 1;
 
--- =============================================================================
--- FUNCTIONS (7)
--- DELIMITER $$ avoids conflicts with $ in JSON PATH expressions
--- =============================================================================
-
--- BuildAttributeQuery.mysql.sql
--- =============================================================================
--- BuildAttributeQuery
--- Builds a SQL fragment for dynamic attribute column projection.
--- Used by CaseValue pivot SPs and GetPayrollResultValues.
---
--- T-SQL: imperative WHILE + OPENJSON + string concatenation
--- MySQL: JSON_TABLE with FOR ORDINALITY + GROUP_CONCAT (order preserved)
---
--- Output: '' if empty, ',' + fragment + newline if attributes present
---
--- Attribute prefix convention:
---   TA_ -> GetTextAttributeValue(field, 'name') AS TA_xxx
---   NA_ -> GetNumericAttributeValue(field, 'name') AS NA_xxx
---   DA_ -> GetDateAttributeValue(field, 'name') AS DA_xxx
---   NULL field -> NULL AS xxx  (PayrunResult has no attribute field)
---
--- NOTE: Attribute JSON keys are plain names ("City"), not prefixed ("TA_City").
--- The TA_/NA_/DA_ prefix is the output column alias only.
--- =============================================================================
-
-USE PayrollEngine;
-
-SET GLOBAL log_bin_trust_function_creators = 1;
-
--- =============================================================================
--- FUNCTIONS (7)
--- DELIMITER $$ avoids conflicts with $ in JSON PATH expressions
--- =============================================================================
-
--- BuildAttributeQuery.mysql.sql
--- =============================================================================
--- BuildAttributeQuery
--- Builds a SQL fragment for dynamic attribute column projection.
--- Used by CaseValue pivot SPs and GetPayrollResultValues.
---
--- T-SQL: imperative WHILE + OPENJSON + string concatenation
--- MySQL: JSON_TABLE with FOR ORDINALITY + GROUP_CONCAT (order preserved)
---
--- Output: '' if empty, ',' + fragment + newline if attributes present
---
--- Attribute prefix convention:
---   TA_ -> GetTextAttributeValue(field, 'name') AS TA_xxx
---   NA_ -> GetNumericAttributeValue(field, 'name') AS NA_xxx
---   DA_ -> GetDateAttributeValue(field, 'name') AS DA_xxx
---   NULL field -> NULL AS xxx  (PayrunResult has no attribute field)
---
--- NOTE: Attribute JSON keys are plain names ("City"), not prefixed ("TA_City").
--- The TA_/NA_/DA_ prefix is the output column alias only.
--- =============================================================================
-
-USE PayrollEngine;
-
-SET GLOBAL log_bin_trust_function_creators = 1;
-
 DELIMITER $$
 
 DROP FUNCTION IF EXISTS BuildAttributeQuery$$
@@ -2734,7 +2674,7 @@ BEGIN
 
     -- Phase 1: select winning IDs via index-only scan
     -- Index key order: (TenantId, EmployeeId, StartHash, CollectorNameHash)
-    -- → seeks directly to the period, constant cost regardless of history
+    -- ΓåÆ seeks directly to the period, constant cost regardless of history
     WITH Winners AS (
         SELECT r.Id,
             ROW_NUMBER() OVER (
@@ -2744,7 +2684,7 @@ BEGIN
         FROM CollectorCustomResult r
         WHERE r.TenantId = p_tenantId
           AND r.EmployeeId = p_employeeId
-          -- period filter: single hash → equality seek; multiple → IN list
+          -- period filter: single hash ΓåÆ equality seek; multiple ΓåÆ IN list
           AND (v_startHashCount = 0 OR
                (v_startHashCount = 1 AND r.StartHash = v_startHash) OR
                (v_startHashCount > 1 AND r.StartHash IN (
@@ -2817,7 +2757,7 @@ BEGIN
 
     -- Phase 1: select winning IDs via index-only scan
     -- Index key order: (TenantId, EmployeeId, StartHash, CollectorNameHash)
-    -- → seeks directly to the period, constant cost regardless of history
+    -- ΓåÆ seeks directly to the period, constant cost regardless of history
     WITH Winners AS (
         SELECT r.Id,
             ROW_NUMBER() OVER (
@@ -2827,7 +2767,7 @@ BEGIN
         FROM CollectorResult r
         WHERE r.TenantId = p_tenantId
           AND r.EmployeeId = p_employeeId
-          -- period filter: single hash → equality seek; multiple → IN list
+          -- period filter: single hash ΓåÆ equality seek; multiple ΓåÆ IN list
           AND (v_startHashCount = 0 OR
                (v_startHashCount = 1 AND r.StartHash = v_startHash) OR
                (v_startHashCount > 1 AND r.StartHash IN (
@@ -2900,7 +2840,7 @@ BEGIN
 
     -- Phase 1: select winning IDs via index-only scan
     -- Index key order: (TenantId, EmployeeId, StartHash, Name)
-    -- → seeks directly to the period, constant cost regardless of history
+    -- ΓåÆ seeks directly to the period, constant cost regardless of history
     WITH Winners AS (
         SELECT r.Id,
             ROW_NUMBER() OVER (
@@ -2910,7 +2850,7 @@ BEGIN
         FROM PayrunResult r
         WHERE r.TenantId = p_tenantId
           AND r.EmployeeId = p_employeeId
-          -- period filter: single hash → equality seek; multiple → IN list
+          -- period filter: single hash ΓåÆ equality seek; multiple ΓåÆ IN list
           AND (v_startHashCount = 0 OR
                (v_startHashCount = 1 AND r.StartHash = v_startHash) OR
                (v_startHashCount > 1 AND r.StartHash IN (
@@ -2983,7 +2923,7 @@ BEGIN
 
     -- Phase 1: select winning IDs via index-only scan
     -- Index key order: (TenantId, EmployeeId, StartHash, WageTypeNumber)
-    -- → seeks directly to the period, constant cost regardless of history
+    -- ΓåÆ seeks directly to the period, constant cost regardless of history
     WITH Winners AS (
         SELECT r.Id,
             ROW_NUMBER() OVER (
@@ -2993,7 +2933,7 @@ BEGIN
         FROM WageTypeCustomResult r
         WHERE r.TenantId = p_tenantId
           AND r.EmployeeId = p_employeeId
-          -- period filter: single hash → equality seek; multiple → IN list
+          -- period filter: single hash ΓåÆ equality seek; multiple ΓåÆ IN list
           AND (v_startHashCount = 0 OR
                (v_startHashCount = 1 AND r.StartHash = v_startHash) OR
                (v_startHashCount > 1 AND r.StartHash IN (
@@ -3068,7 +3008,7 @@ BEGIN
 
     -- Phase 1: select winning IDs via index-only scan
     -- Index key order: (TenantId, EmployeeId, StartHash, WageTypeNumber)
-    -- → seeks directly to the period, constant cost regardless of history
+    -- ΓåÆ seeks directly to the period, constant cost regardless of history
     WITH Winners AS (
         SELECT r.Id,
             ROW_NUMBER() OVER (
@@ -3078,7 +3018,7 @@ BEGIN
         FROM WageTypeResult r
         WHERE r.TenantId = p_tenantId
           AND r.EmployeeId = p_employeeId
-          -- period filter: single hash → equality seek; multiple → IN list
+          -- period filter: single hash ΓåÆ equality seek; multiple ΓåÆ IN list
           AND (v_startHashCount = 0 OR
                (v_startHashCount = 1 AND r.StartHash = v_startHash) OR
                (v_startHashCount > 1 AND r.StartHash IN (
@@ -3137,22 +3077,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -3208,22 +3133,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -3281,22 +3191,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -3360,22 +3255,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -3440,22 +3320,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -3513,22 +3378,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -3580,22 +3430,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -3662,13 +3497,10 @@ BEGIN
             OR (
               r.SharedRegulation = 1
               AND EXISTS (
-                -- Match by regulation NAME so a single RegulationShare entry covers all
-                -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
                 SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name           = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
+                WHERE rs.ProviderRegulationId = r.Id
+                  AND rs.ConsumerTenantId     = p_tenantId
+                  AND rs.IsolationLevel       >= 3  -- TenantIsolationLevel.Write
               )
             )
           )
@@ -3712,22 +3544,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -3781,22 +3598,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -3857,22 +3659,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -3924,22 +3711,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -3992,22 +3764,7 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (
-            r.TenantId = p_tenantId
-            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
-            -- Match by regulation NAME so a single RegulationShare entry covers all
-            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-            OR (
-              r.SharedRegulation = 1
-              AND EXISTS (
-                SELECT 1 FROM RegulationShare rs
-                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
-                WHERE rp.Name             = r.Name
-                  AND rs.ConsumerTenantId = p_tenantId
-                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
-              )
-            )
-          )
+          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId
@@ -4972,6 +4729,6 @@ DELIMITER ;
 -- =============================================================================
 
 INSERT INTO `Version` (Created, MajorVersion, MinorVersion, SubVersion, Owner, Description)
-VALUES (NOW(6), 1, 0, 1, CURRENT_USER(), 'Payroll Engine: Full setup v1.0.1 (MySQL)');
+VALUES (NOW(6), 1, 0, 0, CURRENT_USER(), 'Payroll Engine: Full setup v1.0.0 (MySQL)');
 
-SELECT 'PayrollEngine MySQL schema v1.0.1 created successfully.' AS Result;
+SELECT 'PayrollEngine MySQL schema v1.0.0 created successfully.' AS Result;

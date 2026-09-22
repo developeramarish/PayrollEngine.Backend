@@ -37,10 +37,13 @@ BEGIN
             OR (
               r.SharedRegulation = 1
               AND EXISTS (
+                -- Match by regulation NAME so a single RegulationShare entry covers all
+                -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
                 SELECT 1 FROM RegulationShare rs
-                WHERE rs.ProviderRegulationId = r.Id
-                  AND rs.ConsumerTenantId     = p_tenantId
-                  AND rs.IsolationLevel       >= 3  -- TenantIsolationLevel.Write
+                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
+                WHERE rp.Name           = r.Name
+                  AND rs.ConsumerTenantId = p_tenantId
+                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
               )
             )
           )

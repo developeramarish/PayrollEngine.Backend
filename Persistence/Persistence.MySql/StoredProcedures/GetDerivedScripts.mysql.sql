@@ -25,7 +25,22 @@ BEGIN
         FROM PayrollLayer pl
         INNER JOIN Regulation r ON pl.RegulationName = r.Name
         WHERE r.Status = 0
-          AND (r.TenantId = p_tenantId OR r.SharedRegulation = 1)
+          AND (
+            r.TenantId = p_tenantId
+            -- shared regulation: IsolationLevel must be >= Write to act as payroll layer.
+            -- Match by regulation NAME so a single RegulationShare entry covers all
+            -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
+            OR (
+              r.SharedRegulation = 1
+              AND EXISTS (
+                SELECT 1 FROM RegulationShare rs
+                INNER JOIN Regulation rp ON rs.ProviderRegulationId = rp.Id
+                WHERE rp.Name             = r.Name
+                  AND rs.ConsumerTenantId = p_tenantId
+                  AND rs.IsolationLevel   >= 3  -- TenantIsolationLevel.Write
+              )
+            )
+          )
           AND r.Created <= p_createdBefore
           AND (r.ValidFrom IS NULL OR r.ValidFrom <= p_regulationDate)
           AND pl.Status = 0 AND pl.PayrollId = p_payrollId

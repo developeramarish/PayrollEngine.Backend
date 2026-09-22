@@ -1,4 +1,4 @@
--- #region DATABASE
+﻿-- #region DATABASE
 USE [master];
 GO
 
@@ -5440,7 +5440,7 @@ GO
 
 -- =============================================
 -- Get all active derived regulation ids from the payroll.
--- IsolationLevel < Write (< 3) means Consolidation-only — not a payroll layer.
+-- IsolationLevel < Write (< 3) means Consolidation-only ΓÇö not a payroll layer.
 -- Only shares with IsolationLevel >= Write (3) are eligible as payroll layers.
 -- =============================================
 CREATE FUNCTION [dbo].[GetDerivedRegulations] (
@@ -5484,14 +5484,10 @@ RETURN (
             OR (
               [Regulation].[SharedRegulation] = 1
               AND EXISTS (
-                -- Match by regulation NAME so a single RegulationShare entry covers all
-                -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
-                SELECT 1
-                FROM [dbo].[RegulationShare] rs
-                INNER JOIN [dbo].[Regulation] rp ON rs.[ProviderRegulationId] = rp.[Id]
-                WHERE rp.[Name]             = [Regulation].[Name]
-                  AND rs.[ConsumerTenantId] = @tenantId
-                  AND rs.[IsolationLevel]   >= 3  -- TenantIsolationLevel.Write
+                SELECT 1 FROM [dbo].[RegulationShare] rs
+                WHERE rs.[ProviderRegulationId] = [Regulation].[Id]
+                  AND rs.[ConsumerTenantId]     = @tenantId
+                  AND rs.[IsolationLevel]       >= 3  -- TenantIsolationLevel.Write
               )
             )
           )
@@ -7251,7 +7247,7 @@ BEGIN
 
     -- Phase 1: select winning IDs via index-only scan
     -- Index key order: (TenantId, EmployeeId, StartHash, CollectorNameHash)
-    -- → seeks directly to the period, constant cost regardless of history
+    -- ΓåÆ seeks directly to the period, constant cost regardless of history
     ;WITH Winners AS (
         SELECT
             r.[Id],
@@ -7262,7 +7258,7 @@ BEGIN
         FROM dbo.[CollectorCustomResult] r
         WHERE r.[TenantId] = @tenantId
           AND r.[EmployeeId] = @employeeId
-          -- period filter: single hash → equality seek; multiple → IN list
+          -- period filter: single hash ΓåÆ equality seek; multiple ΓåÆ IN list
           AND (
               (@startHashCount = 1 AND r.[StartHash] = @startHash)
               OR (@startHashCount > 1 AND r.[StartHash] IN (
@@ -7351,7 +7347,7 @@ BEGIN
 
     -- Phase 1: select winning IDs via index-only scan
     -- Index key order: (TenantId, EmployeeId, StartHash, CollectorNameHash)
-    -- → seeks directly to the period, constant cost regardless of history
+    -- ΓåÆ seeks directly to the period, constant cost regardless of history
     ;WITH Winners AS (
         SELECT
             r.[Id],
@@ -7362,7 +7358,7 @@ BEGIN
         FROM dbo.[CollectorResult] r
         WHERE r.[TenantId] = @tenantId
           AND r.[EmployeeId] = @employeeId
-          -- period filter: single hash → equality seek; multiple → IN list
+          -- period filter: single hash ΓåÆ equality seek; multiple ΓåÆ IN list
           AND (
               (@startHashCount = 1 AND r.[StartHash] = @startHash)
               OR (@startHashCount > 1 AND r.[StartHash] IN (
@@ -7451,7 +7447,7 @@ BEGIN
 
     -- Phase 1: select winning IDs via index-only scan
     -- Index key order: (TenantId, EmployeeId, StartHash, Name)
-    -- → seeks directly to the period, constant cost regardless of history
+    -- ΓåÆ seeks directly to the period, constant cost regardless of history
     ;WITH Winners AS (
         SELECT
             r.[Id],
@@ -7462,7 +7458,7 @@ BEGIN
         FROM dbo.[PayrunResult] r
         WHERE r.[TenantId] = @tenantId
           AND r.[EmployeeId] = @employeeId
-          -- period filter: single hash → equality seek; multiple → IN list
+          -- period filter: single hash ΓåÆ equality seek; multiple ΓåÆ IN list
           AND (
               (@startHashCount = 1 AND r.[StartHash] = @startHash)
               OR (@startHashCount > 1 AND r.[StartHash] IN (
@@ -7551,7 +7547,7 @@ BEGIN
 
     -- Phase 1: select winning IDs via index-only scan
     -- Index key order: (TenantId, EmployeeId, StartHash, WageTypeNumber)
-    -- → seeks directly to the period, constant cost regardless of history
+    -- ΓåÆ seeks directly to the period, constant cost regardless of history
     ;WITH Winners AS (
         SELECT
             r.[Id],
@@ -7562,7 +7558,7 @@ BEGIN
         FROM dbo.[WageTypeCustomResult] r
         WHERE r.[TenantId] = @tenantId
           AND r.[EmployeeId] = @employeeId
-          -- period filter: single hash → equality seek; multiple → IN list
+          -- period filter: single hash ΓåÆ equality seek; multiple ΓåÆ IN list
           AND (
               (@startHashCount = 1 AND r.[StartHash] = @startHash)
               OR (@startHashCount > 1 AND r.[StartHash] IN (
@@ -7651,7 +7647,7 @@ BEGIN
 
     -- Phase 1: select winning IDs via index-only scan
     -- Index key order: (TenantId, EmployeeId, StartHash, WageTypeNumber)
-    -- → seeks directly to the period, constant cost regardless of history
+    -- ΓåÆ seeks directly to the period, constant cost regardless of history
     ;WITH Winners AS (
         SELECT
             r.[Id],
@@ -7662,7 +7658,7 @@ BEGIN
         FROM dbo.[WageTypeResult] r
         WHERE r.[TenantId] = @tenantId
           AND r.[EmployeeId] = @employeeId
-          -- period filter: single hash → equality seek; multiple → IN list
+          -- period filter: single hash ΓåÆ equality seek; multiple ΓåÆ IN list
           AND (
               (@startHashCount = 1 AND r.[StartHash] = @startHash)
               OR (@startHashCount > 1 AND r.[StartHash] IN (
@@ -10238,9 +10234,9 @@ INSERT INTO dbo.[Version] (
 VALUES (
     1,
     0,
-    1,
+    0,
     CURRENT_USER,
-    'Payroll Engine: Full setup v1.0.1' )
+    'Payroll Engine: Full setup v1.0.0' )
 SET @errorID = @@ERROR
 IF ( @errorID <> 0 ) BEGIN
     PRINT 'Error while updating the Payroll Engine database version.'

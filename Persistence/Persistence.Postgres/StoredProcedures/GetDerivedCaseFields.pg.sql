@@ -28,7 +28,9 @@ LANGUAGE sql STABLE AS $$
         WHERE r."Status" = 0
           AND (r."TenantId" = "tenantId"
             OR (r."SharedRegulation" = true
-              AND EXISTS (SELECT 1 FROM "RegulationShare" rs WHERE rs."ProviderRegulationId" = r."Id" AND rs."ConsumerTenantId" = "tenantId" AND rs."IsolationLevel" >= 3)))
+              AND EXISTS (SELECT 1 FROM "RegulationShare" rs
+                          INNER JOIN "Regulation" rp ON rs."ProviderRegulationId" = rp."Id"
+                          WHERE rp."Name" = r."Name" AND rs."ConsumerTenantId" = "tenantId" AND rs."IsolationLevel" >= 3)))
           AND r."Created" <= "createdBefore"
           AND (r."ValidFrom" IS NULL OR r."ValidFrom" <= "regulationDate")
           AND pl."Status" = 0 AND pl."PayrollId" = "payrollId"
