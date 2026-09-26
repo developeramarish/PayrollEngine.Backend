@@ -63,9 +63,19 @@ public class SemiMonthPayrollPeriod : IPayrollPeriod
         $"{Period.Start.ToCompactString()} - {Period.End.ToCompactString()}";
 
     /// <inheritdoc />
-    public IPayrollPeriod GetPayrollPeriod(DateTime moment, int offset = 0) =>
-        offset == 0 ? new(Culture, Calendar, moment) :
-            new SemiMonthPayrollPeriod(Culture, Calendar, moment.AddMonths(offset));
+    public IPayrollPeriod GetPayrollPeriod(DateTime moment, int offset = 0)
+    {
+        if (offset == 0) return new SemiMonthPayrollPeriod(Culture, Calendar, moment);
+        // AddMonths(offset) would overshoot by a full month (skipping the opposite half).
+        // Step period by period using Start/End boundaries instead.
+        IPayrollPeriod result = this;
+        var step = Math.Sign(offset);
+        for (var i = 0; i < Math.Abs(offset); i++)
+            result = step > 0
+                ? new SemiMonthPayrollPeriod(Culture, Calendar, result.End.Date.AddDays(1))
+                : new SemiMonthPayrollPeriod(Culture, Calendar, result.Start.AddDays(-1));
+        return result;
+    }
 
     #endregion
 

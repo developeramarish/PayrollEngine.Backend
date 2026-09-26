@@ -79,7 +79,7 @@ public class SemiYearPayrollPeriod : IPayrollPeriod
     /// <inheritdoc />
     public IPayrollPeriod GetPayrollPeriod(DateTime moment, int offset = 0) =>
         offset == 0 ? new(Culture, Calendar, moment) :
-            new SemiYearPayrollPeriod(Culture, Calendar, moment.AddYears(offset));
+            new SemiYearPayrollPeriod(Culture, Calendar, moment.AddMonths(offset * Date.MonthsInSemiYear));
 
     #endregion
 

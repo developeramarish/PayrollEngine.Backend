@@ -89,7 +89,7 @@ public class BiWeekPayrollPeriod : IPayrollPeriod
     /// <inheritdoc />
     public IPayrollPeriod GetPayrollPeriod(DateTime moment, int offset = 0) =>
         offset == 0 ? new(Culture, Calendar, moment) :
-            new BiWeekPayrollPeriod(Culture, Calendar, moment.AddDays(offset * Date.DaysInWeek));
+            new BiWeekPayrollPeriod(Culture, Calendar, moment.AddDays(offset * Date.DaysInBiWeek));
 
     #endregion
 

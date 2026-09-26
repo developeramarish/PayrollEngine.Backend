@@ -77,7 +77,7 @@ public class QuarterPayrollPeriod : IPayrollPeriod
     /// <inheritdoc />
     public IPayrollPeriod GetPayrollPeriod(DateTime moment, int offset = 0) =>
         offset == 0 ? new(Culture, Calendar, moment) :
-            new QuarterPayrollPeriod(Culture, Calendar, moment.AddMonths(offset));
+            new QuarterPayrollPeriod(Culture, Calendar, moment.AddMonths(offset * Date.MonthsInQuarter));
 
     #endregion
 

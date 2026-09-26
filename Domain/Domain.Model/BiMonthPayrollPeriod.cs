@@ -78,7 +78,7 @@ public class BiMonthPayrollPeriod : IPayrollPeriod
     /// <inheritdoc />
     public IPayrollPeriod GetPayrollPeriod(DateTime moment, int offset = 0) =>
         offset == 0 ? new(Culture, Calendar, moment) :
-            new BiMonthPayrollPeriod(Culture, Calendar, moment.AddMonths(offset));
+            new BiMonthPayrollPeriod(Culture, Calendar, moment.AddMonths(offset * 2));
 
     #endregion
 

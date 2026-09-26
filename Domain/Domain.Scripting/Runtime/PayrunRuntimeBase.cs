@@ -891,7 +891,19 @@ public abstract class PayrunRuntimeBase : PayrollRuntimeBase, IPayrunRuntime
         {
             periodStarts.Add(period.Start);
             // next period
-            period = period.GetPayrollPeriod(period.Start, 1);
+            var next = period.GetPayrollPeriod(period.Start, 1);
+            // defensive guard: if the period did not advance, the calendar implementation
+            // has a bug (e.g. GetPayrollPeriod uses an incorrect step size). Break to
+            // prevent an infinite loop. The affected period type will be reported in logs.
+            if (next.Start <= period.Start)
+            {
+                Log.Warning("GetConsolidatedPeriodStarts: period did not advance " +
+                    $"(Start={period.Start:yyyy-MM-dd}, PeriodMoment={periodMoment:yyyy-MM-dd}, " +
+                    $"JobPeriodStart={PayrunJob.PeriodStart:yyyy-MM-dd}). " +
+                    "Breaking consolidation loop — check IPayrollPeriod.GetPayrollPeriod implementation.");
+                break;
+            }
+            period = next;
         }
         return periodStarts;
     }
