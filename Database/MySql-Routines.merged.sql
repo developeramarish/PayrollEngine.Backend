@@ -955,7 +955,7 @@ BEGIN
       AND (p_jobStatus IS NULL OR ccr.PayrunJobId IN (
                SELECT pj.Id FROM PayrunJob pj
                WHERE pj.Id = ccr.PayrunJobId
-                 AND (pj.JobStatus & p_jobStatus) = pj.JobStatus))
+                 AND pj.JobStatus = p_jobStatus))
       AND (ccr.Forecast IS NULL OR ccr.Forecast = p_forecast)
       AND (p_evaluationDate IS NULL OR ccr.Created <= p_evaluationDate)
     ORDER BY ccr.Created;
@@ -1015,7 +1015,7 @@ BEGIN
       AND (p_jobStatus IS NULL OR cr.PayrunJobId IN (
                SELECT pj.Id FROM PayrunJob pj
                WHERE pj.Id = cr.PayrunJobId
-                 AND (pj.JobStatus & p_jobStatus) = pj.JobStatus))
+                 AND pj.JobStatus = p_jobStatus))
       AND (cr.Forecast IS NULL OR cr.Forecast = p_forecast)
       AND (p_evaluationDate IS NULL OR cr.Created <= p_evaluationDate)
     ORDER BY cr.Created;
@@ -1234,7 +1234,7 @@ BEGIN
                    FROM JSON_TABLE(p_collectorNameHashes, '$[*]' COLUMNS (val VARCHAR(20) PATH '$')) AS jt)))
           AND (p_evaluationDate IS NULL OR r.Created <= p_evaluationDate)
           AND (p_jobStatus IS NULL OR r.PayrunJobId IN (
-                   SELECT pj.Id FROM PayrunJob pj WHERE (pj.JobStatus & p_jobStatus) = pj.JobStatus))
+                   SELECT pj.Id FROM PayrunJob pj WHERE pj.JobStatus = p_jobStatus))
           AND (r.Forecast IS NULL OR r.Forecast = p_forecast)
           AND (p_noRetro = 0 OR r.ParentJobId IS NULL)
           AND (p_excludeParentJobId IS NULL OR r.ParentJobId IS NULL
@@ -1312,7 +1312,7 @@ BEGIN
                    FROM JSON_TABLE(p_collectorNameHashes, '$[*]' COLUMNS (val VARCHAR(20) PATH '$')) AS jt)))
           AND (p_evaluationDate IS NULL OR r.Created <= p_evaluationDate)
           AND (p_jobStatus IS NULL OR r.PayrunJobId IN (
-                   SELECT pj.Id FROM PayrunJob pj WHERE (pj.JobStatus & p_jobStatus) = pj.JobStatus))
+                   SELECT pj.Id FROM PayrunJob pj WHERE pj.JobStatus = p_jobStatus))
           AND (r.Forecast IS NULL OR r.Forecast = p_forecast)
           AND (p_noRetro = 0 OR r.ParentJobId IS NULL)
           AND (p_excludeParentJobId IS NULL OR r.ParentJobId IS NULL
@@ -1390,7 +1390,7 @@ BEGIN
                    FROM JSON_TABLE(p_names, '$[*]' COLUMNS (val VARCHAR(128) PATH '$')) AS jt)))
           AND (p_evaluationDate IS NULL OR r.Created <= p_evaluationDate)
           AND (p_jobStatus IS NULL OR r.PayrunJobId IN (
-                   SELECT pj.Id FROM PayrunJob pj WHERE (pj.JobStatus & p_jobStatus) = pj.JobStatus))
+                   SELECT pj.Id FROM PayrunJob pj WHERE pj.JobStatus = p_jobStatus))
           AND (r.Forecast IS NULL OR r.Forecast = p_forecast)
           AND (p_noRetro = 0 OR r.ParentJobId IS NULL)
           AND (p_excludeParentJobId IS NULL OR r.ParentJobId IS NULL
@@ -1468,7 +1468,7 @@ BEGIN
                    FROM JSON_TABLE(p_wageTypeNumbers, '$[*]' COLUMNS (val VARCHAR(50) PATH '$')) AS jt)))
           AND (p_evaluationDate IS NULL OR r.Created <= p_evaluationDate)
           AND (p_jobStatus IS NULL OR r.PayrunJobId IN (
-                   SELECT pj.Id FROM PayrunJob pj WHERE (pj.JobStatus & p_jobStatus) = pj.JobStatus))
+                   SELECT pj.Id FROM PayrunJob pj WHERE pj.JobStatus = p_jobStatus))
           AND (r.Forecast IS NULL OR r.Forecast = p_forecast)
           AND (p_noRetro = 0 OR r.ParentJobId IS NULL)
           AND (p_excludeParentJobId IS NULL OR r.ParentJobId IS NULL
@@ -1548,7 +1548,7 @@ BEGIN
                    FROM JSON_TABLE(p_wageTypeNumbers, '$[*]' COLUMNS (val VARCHAR(50) PATH '$')) AS jt)))
           AND (p_evaluationDate IS NULL OR wtr.Created <= p_evaluationDate)
           AND (p_jobStatus IS NULL OR wtr.PayrunJobId IN (
-                   SELECT pj.Id FROM PayrunJob pj WHERE (pj.JobStatus & p_jobStatus) = pj.JobStatus))
+                   SELECT pj.Id FROM PayrunJob pj WHERE pj.JobStatus = p_jobStatus))
           AND (wtr.Forecast IS NULL OR wtr.Forecast = p_forecast)
           AND (p_noRetro = 0 OR wtr.ParentJobId IS NULL)
           AND (p_excludeParentJobId IS NULL OR wtr.ParentJobId IS NULL
@@ -3111,7 +3111,7 @@ BEGIN
       AND (p_jobStatus IS NULL OR wtcr.PayrunJobId IN (
                SELECT pj.Id FROM PayrunJob pj
                WHERE pj.Id = wtcr.PayrunJobId
-                 AND (pj.JobStatus & p_jobStatus) = pj.JobStatus))
+                 AND pj.JobStatus = p_jobStatus))
       AND (wtcr.Forecast IS NULL OR wtcr.Forecast = p_forecast)
       AND (p_evaluationDate IS NULL OR wtcr.Created <= p_evaluationDate)
     ORDER BY wtcr.Created;
@@ -3124,7 +3124,7 @@ DELIMITER ;
 -- =============================================================================
 -- GetWageTypeResults
 -- OPENJSON(@wageTypeNumbers) -> JSON_TABLE + JSON_LENGTH
--- [JobStatus] & @jobStatus = [JobStatus] -> (pj.JobStatus & p_jobStatus) = pj.JobStatus
+-- [JobStatus] & @jobStatus = [JobStatus] -> pj.JobStatus = p_jobStatus (exact match)
 -- TOP (100) PERCENT ... ORDER BY -> ORDER BY (no TOP in MySQL)
 -- =============================================================================
 
@@ -3174,7 +3174,7 @@ BEGIN
       AND (p_jobStatus IS NULL OR wtr.PayrunJobId IN (
                SELECT pj.Id FROM PayrunJob pj
                WHERE pj.Id = wtr.PayrunJobId
-                 AND (pj.JobStatus & p_jobStatus) = pj.JobStatus))
+                 AND pj.JobStatus = p_jobStatus))
       AND (wtr.Forecast IS NULL OR wtr.Forecast = p_forecast)
       AND (p_evaluationDate IS NULL OR wtr.Created <= p_evaluationDate)
     ORDER BY wtr.Created;

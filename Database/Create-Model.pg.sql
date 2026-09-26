@@ -2424,7 +2424,7 @@ BEGIN
       AND (jobStatus IS NULL OR "ccr"."PayrunJobId" IN (
                SELECT "pj"."Id" FROM "PayrunJob" "pj"
                WHERE "pj"."Id" = "ccr"."PayrunJobId"
-                 AND ("pj"."JobStatus" & jobStatus) = "pj"."JobStatus"))
+                 AND "pj"."JobStatus" = jobStatus))
       AND ("ccr"."Forecast" IS NULL OR "ccr"."Forecast" = forecast)
       AND (evaluationDate IS NULL OR "ccr"."Created" <= evaluationDate)
     ORDER BY "ccr"."Created";
@@ -2509,7 +2509,7 @@ BEGIN
       AND (jobStatus IS NULL OR "cr"."PayrunJobId" IN (
                SELECT "pj"."Id" FROM "PayrunJob" "pj"
                WHERE "pj"."Id" = "cr"."PayrunJobId"
-                 AND ("pj"."JobStatus" & jobStatus) = "pj"."JobStatus"))
+                 AND "pj"."JobStatus" = jobStatus))
       AND ("cr"."Forecast" IS NULL OR "cr"."Forecast" = forecast)
       AND (evaluationDate IS NULL OR "cr"."Created" <= evaluationDate)
     ORDER BY "cr"."Created";
@@ -2791,7 +2791,7 @@ BEGIN
           AND ("evaluationDate" IS NULL OR r."Created" <= "evaluationDate")
           AND ("jobStatus" IS NULL OR r."PayrunJobId" IN (
                 SELECT pj."Id" FROM "PayrunJob" pj
-                WHERE (pj."JobStatus" & "jobStatus") = pj."JobStatus"))
+                WHERE pj."JobStatus" = "jobStatus"))
           AND (r."Forecast" IS NULL OR r."Forecast" = "forecast")
           AND ("noRetro" = FALSE OR r."ParentJobId" IS NULL)
           AND ("excludeParentJobId" IS NULL OR r."ParentJobId" IS NULL
@@ -2877,7 +2877,7 @@ BEGIN
           AND ("evaluationDate" IS NULL OR r."Created" <= "evaluationDate")
           AND ("jobStatus" IS NULL OR r."PayrunJobId" IN (
                 SELECT pj."Id" FROM "PayrunJob" pj
-                WHERE (pj."JobStatus" & "jobStatus") = pj."JobStatus"))
+                WHERE pj."JobStatus" = "jobStatus"))
           AND (r."Forecast" IS NULL OR r."Forecast" = "forecast")
           AND ("noRetro" = FALSE OR r."ParentJobId" IS NULL)
           AND ("excludeParentJobId" IS NULL OR r."ParentJobId" IS NULL
@@ -2962,7 +2962,7 @@ BEGIN
           AND ("evaluationDate" IS NULL OR r."Created" <= "evaluationDate")
           AND ("jobStatus" IS NULL OR r."PayrunJobId" IN (
                 SELECT pj."Id" FROM "PayrunJob" pj
-                WHERE (pj."JobStatus" & "jobStatus") = pj."JobStatus"))
+                WHERE pj."JobStatus" = "jobStatus"))
           AND (r."Forecast" IS NULL OR r."Forecast" = "forecast")
           AND ("noRetro" = FALSE OR r."ParentJobId" IS NULL)
           AND ("excludeParentJobId" IS NULL OR r."ParentJobId" IS NULL
@@ -3046,7 +3046,7 @@ BEGIN
           AND ("evaluationDate" IS NULL OR r."Created" <= "evaluationDate")
           AND ("jobStatus" IS NULL OR r."PayrunJobId" IN (
                 SELECT pj."Id" FROM "PayrunJob" pj
-                WHERE (pj."JobStatus" & "jobStatus") = pj."JobStatus"))
+                WHERE pj."JobStatus" = "jobStatus"))
           AND (r."Forecast" IS NULL OR r."Forecast" = "forecast")
           AND ("noRetro" = FALSE OR r."ParentJobId" IS NULL)
           AND ("excludeParentJobId" IS NULL OR r."ParentJobId" IS NULL
@@ -3130,7 +3130,7 @@ BEGIN
           AND ("evaluationDate" IS NULL OR r."Created" <= "evaluationDate")
           AND ("jobStatus" IS NULL OR r."PayrunJobId" IN (
                 SELECT pj."Id" FROM "PayrunJob" pj
-                WHERE (pj."JobStatus" & "jobStatus") = pj."JobStatus"))
+                WHERE pj."JobStatus" = "jobStatus"))
           AND (r."Forecast" IS NULL OR r."Forecast" = "forecast")
           AND ("noRetro" = FALSE OR r."ParentJobId" IS NULL)
           AND ("excludeParentJobId" IS NULL OR r."ParentJobId" IS NULL
@@ -4950,7 +4950,7 @@ BEGIN
       AND (jobStatus IS NULL OR "wtcr"."PayrunJobId" IN (
                SELECT "pj"."Id" FROM "PayrunJob" "pj"
                WHERE "pj"."Id" = "wtcr"."PayrunJobId"
-                 AND ("pj"."JobStatus" & jobStatus) = "pj"."JobStatus"))
+                 AND "pj"."JobStatus" = jobStatus))
       AND ("wtcr"."Forecast" IS NULL OR "wtcr"."Forecast" = forecast)
       AND (evaluationDate IS NULL OR "wtcr"."Created" <= evaluationDate)
     ORDER BY "wtcr"."Created";
@@ -5033,7 +5033,7 @@ BEGIN
       AND (jobStatus IS NULL OR "wtr"."PayrunJobId" IN (
                SELECT "pj"."Id" FROM "PayrunJob" "pj"
                WHERE "pj"."Id" = "wtr"."PayrunJobId"
-                 AND ("pj"."JobStatus" & jobStatus) = "pj"."JobStatus"))
+                 AND "pj"."JobStatus" = jobStatus))
       AND ("wtr"."Forecast" IS NULL OR "wtr"."Forecast" = forecast)
       AND (evaluationDate IS NULL OR "wtr"."Created" <= evaluationDate)
     ORDER BY "wtr"."Created";

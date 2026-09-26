@@ -72,7 +72,7 @@ BEGIN
       AND (jobStatus IS NULL OR "wtcr"."PayrunJobId" IN (
                SELECT "pj"."Id" FROM "PayrunJob" "pj"
                WHERE "pj"."Id" = "wtcr"."PayrunJobId"
-                 AND ("pj"."JobStatus" & jobStatus) = "pj"."JobStatus"))
+                 AND "pj"."JobStatus" = jobStatus))
       AND ("wtcr"."Forecast" IS NULL OR "wtcr"."Forecast" = forecast)
       AND (evaluationDate IS NULL OR "wtcr"."Created" <= evaluationDate)
     ORDER BY "wtcr"."Created";

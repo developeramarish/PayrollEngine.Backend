@@ -67,7 +67,7 @@ BEGIN
           AND ("evaluationDate" IS NULL OR r."Created" <= "evaluationDate")
           AND ("jobStatus" IS NULL OR r."PayrunJobId" IN (
                 SELECT pj."Id" FROM "PayrunJob" pj
-                WHERE (pj."JobStatus" & "jobStatus") = pj."JobStatus"))
+                WHERE pj."JobStatus" = "jobStatus"))
           AND (r."Forecast" IS NULL OR r."Forecast" = "forecast")
           AND ("noRetro" = FALSE OR r."ParentJobId" IS NULL)
           AND ("excludeParentJobId" IS NULL OR r."ParentJobId" IS NULL
