@@ -207,6 +207,15 @@ public static class PayrollResultSetExtensions
                 foreach (var collectorResult in payrollResultSet.CollectorResults)
                 {
                     collectorResult.SetCreatedDate(resultDate);
+
+                    // collector custom results
+                    if (collectorResult.CustomResults != null)
+                    {
+                        foreach (var customResult in collectorResult.CustomResults)
+                        {
+                            customResult.SetCreatedDate(resultDate);
+                        }
+                    }
                 }
             }
 
