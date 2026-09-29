@@ -88,7 +88,7 @@ BEGIN
         OR wtr.[PayrunJobId] IN (
           SELECT pj.[Id] FROM dbo.[PayrunJob] pj
           WHERE pj.[Id] = wtr.[PayrunJobId]
-            AND pj.[JobStatus] & @jobStatus = pj.[JobStatus]
+            AND pj.[JobStatus] = @jobStatus
         )
       )
       AND (
@@ -136,7 +136,7 @@ BEGIN
         OR wtr.[PayrunJobId] IN (
           SELECT pj.[Id] FROM dbo.[PayrunJob] pj
           WHERE pj.[Id] = wtr.[PayrunJobId]
-            AND pj.[JobStatus] & @jobStatus = pj.[JobStatus]
+            AND pj.[JobStatus] = @jobStatus
         )
       )
       AND (

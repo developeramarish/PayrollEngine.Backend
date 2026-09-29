@@ -6755,7 +6755,7 @@ BEGIN
         OR ccr.[PayrunJobId] IN (
           SELECT pj.[Id] FROM dbo.[PayrunJob] pj
           WHERE pj.[Id] = ccr.[PayrunJobId]
-            AND pj.[JobStatus] & @jobStatus = pj.[JobStatus]
+            AND pj.[JobStatus] = @jobStatus
         )
       )
       AND (
@@ -6803,7 +6803,7 @@ BEGIN
         OR ccr.[PayrunJobId] IN (
           SELECT pj.[Id] FROM dbo.[PayrunJob] pj
           WHERE pj.[Id] = ccr.[PayrunJobId]
-            AND pj.[JobStatus] & @jobStatus = pj.[JobStatus]
+            AND pj.[JobStatus] = @jobStatus
         )
       )
       AND (
@@ -6910,7 +6910,7 @@ BEGIN
         OR cr.[PayrunJobId] IN (
           SELECT pj.[Id] FROM dbo.[PayrunJob] pj
           WHERE pj.[Id] = cr.[PayrunJobId]
-            AND pj.[JobStatus] & @jobStatus = pj.[JobStatus]
+            AND pj.[JobStatus] = @jobStatus
         )
       )
       AND (
@@ -6958,7 +6958,7 @@ BEGIN
         OR cr.[PayrunJobId] IN (
           SELECT pj.[Id] FROM dbo.[PayrunJob] pj
           WHERE pj.[Id] = cr.[PayrunJobId]
-            AND pj.[JobStatus] & @jobStatus = pj.[JobStatus]
+            AND pj.[JobStatus] = @jobStatus
         )
       )
       AND (
@@ -7277,7 +7277,7 @@ BEGIN
           AND (@jobStatus IS NULL
                OR r.[PayrunJobId] IN (
                    SELECT pj.[Id] FROM dbo.[PayrunJob] pj
-                   WHERE pj.[JobStatus] & @jobStatus = pj.[JobStatus]))
+                   WHERE pj.[JobStatus] = @jobStatus))
           AND (r.[Forecast] IS NULL OR r.[Forecast] = @forecast)
           AND (@noRetro = 0 OR r.[ParentJobId] IS NULL)
           AND (@excludeParentJobId IS NULL OR r.[ParentJobId] IS NULL
@@ -7377,7 +7377,7 @@ BEGIN
           AND (@jobStatus IS NULL
                OR r.[PayrunJobId] IN (
                    SELECT pj.[Id] FROM dbo.[PayrunJob] pj
-                   WHERE pj.[JobStatus] & @jobStatus = pj.[JobStatus]))
+                   WHERE pj.[JobStatus] = @jobStatus))
           AND (r.[Forecast] IS NULL OR r.[Forecast] = @forecast)
           AND (@noRetro = 0 OR r.[ParentJobId] IS NULL)
           AND (@excludeParentJobId IS NULL OR r.[ParentJobId] IS NULL
@@ -7477,7 +7477,7 @@ BEGIN
           AND (@jobStatus IS NULL
                OR r.[PayrunJobId] IN (
                    SELECT pj.[Id] FROM dbo.[PayrunJob] pj
-                   WHERE pj.[JobStatus] & @jobStatus = pj.[JobStatus]))
+                   WHERE pj.[JobStatus] = @jobStatus))
           AND (r.[Forecast] IS NULL OR r.[Forecast] = @forecast)
           AND (@noRetro = 0 OR r.[ParentJobId] IS NULL)
           AND (@excludeParentJobId IS NULL OR r.[ParentJobId] IS NULL
@@ -7577,7 +7577,7 @@ BEGIN
           AND (@jobStatus IS NULL
                OR r.[PayrunJobId] IN (
                    SELECT pj.[Id] FROM dbo.[PayrunJob] pj
-                   WHERE pj.[JobStatus] & @jobStatus = pj.[JobStatus]))
+                   WHERE pj.[JobStatus] = @jobStatus))
           AND (r.[Forecast] IS NULL OR r.[Forecast] = @forecast)
           AND (@noRetro = 0 OR r.[ParentJobId] IS NULL)
           AND (@excludeParentJobId IS NULL OR r.[ParentJobId] IS NULL
@@ -7677,7 +7677,7 @@ BEGIN
           AND (@jobStatus IS NULL
                OR r.[PayrunJobId] IN (
                    SELECT pj.[Id] FROM dbo.[PayrunJob] pj
-                   WHERE pj.[JobStatus] & @jobStatus = pj.[JobStatus]))
+                   WHERE pj.[JobStatus] = @jobStatus))
           AND (r.[Forecast] IS NULL OR r.[Forecast] = @forecast)
           AND (@noRetro = 0 OR r.[ParentJobId] IS NULL)
           AND (@excludeParentJobId IS NULL OR r.[ParentJobId] IS NULL
@@ -9911,7 +9911,7 @@ BEGIN
         OR wtcr.[PayrunJobId] IN (
           SELECT pj.[Id] FROM dbo.[PayrunJob] pj
           WHERE pj.[Id] = wtcr.[PayrunJobId]
-            AND pj.[JobStatus] & @jobStatus = pj.[JobStatus]
+            AND pj.[JobStatus] = @jobStatus
         )
       )
       AND (
@@ -9959,7 +9959,7 @@ BEGIN
         OR wtcr.[PayrunJobId] IN (
           SELECT pj.[Id] FROM dbo.[PayrunJob] pj
           WHERE pj.[Id] = wtcr.[PayrunJobId]
-            AND pj.[JobStatus] & @jobStatus = pj.[JobStatus]
+            AND pj.[JobStatus] = @jobStatus
         )
       )
       AND (
@@ -10065,7 +10065,7 @@ BEGIN
         OR wtr.[PayrunJobId] IN (
           SELECT pj.[Id] FROM dbo.[PayrunJob] pj
           WHERE pj.[Id] = wtr.[PayrunJobId]
-            AND pj.[JobStatus] & @jobStatus = pj.[JobStatus]
+            AND pj.[JobStatus] = @jobStatus
         )
       )
       AND (
@@ -10113,7 +10113,7 @@ BEGIN
         OR wtr.[PayrunJobId] IN (
           SELECT pj.[Id] FROM dbo.[PayrunJob] pj
           WHERE pj.[Id] = wtr.[PayrunJobId]
-            AND pj.[JobStatus] & @jobStatus = pj.[JobStatus]
+            AND pj.[JobStatus] = @jobStatus
         )
       )
       AND (
