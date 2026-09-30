@@ -49,7 +49,7 @@ RETURNS TABLE(
     "Attributes"         TEXT,
     "Documents"          BIGINT
 )
-LANGUAGE plpgsql STABLE AS $$
+LANGUAGE plpgsql VOLATILE AS $$
 DECLARE
     v_attrSql       TEXT;
     v_pivotSql      TEXT;
