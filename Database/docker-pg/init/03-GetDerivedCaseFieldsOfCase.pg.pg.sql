@@ -22,7 +22,7 @@ RETURNS TABLE(
 LANGUAGE sql STABLE AS $$
     WITH DerivedRegulations AS (
         SELECT r."Id", pl."Level", pl."Priority",
-            ROW_NUMBER() OVER (PARTITION BY pl."Id", r."Name" ORDER BY r."ValidFrom" DESC, r."Created" DESC) AS "RowNumber"
+            ROW_NUMBER() OVER (PARTITION BY pl."Id", r."Name" ORDER BY r."ValidFrom" DESC NULLS LAST, r."Created" DESC) AS "RowNumber"
         FROM "PayrollLayer" pl
         INNER JOIN "Regulation" r ON pl."RegulationName" = r."Name"
         WHERE r."Status" = 0
