@@ -2398,35 +2398,35 @@ DECLARE
     v_collectorNameHash INT;
     v_collectorCount    INT;
 BEGIN
-    v_collectorCount := CASE WHEN collectorNameHashes IS NULL THEN 0
-                             ELSE jsonb_array_length(collectorNameHashes::jsonb) END;
+    v_collectorCount := CASE WHEN "collectorNameHashes" IS NULL THEN 0
+                             ELSE jsonb_array_length("collectorNameHashes"::jsonb) END;
 
     IF v_collectorCount = 1 THEN
         SELECT CAST(jt.val AS INT) INTO v_collectorNameHash
-        FROM jsonb_array_elements_text(collectorNameHashes::jsonb) AS jt(val)
+        FROM jsonb_array_elements_text("collectorNameHashes"::jsonb) AS jt(val)
         LIMIT 1;
     END IF;
 
     RETURN QUERY
     SELECT "ccr".*
     FROM "CollectorCustomResult" "ccr"
-    WHERE "ccr"."TenantId" = tenantId
-      AND "ccr"."EmployeeId" = employeeId
-      AND (divisionId IS NULL        OR "ccr"."DivisionId" = divisionId)
-      AND (payrunJobId IS NULL       OR "ccr"."PayrunJobId" = payrunJobId)
-      AND (parentPayrunJobId IS NULL OR "ccr"."ParentJobId" = parentPayrunJobId)
-      AND (collectorNameHashes IS NULL OR v_collectorCount = 0
+    WHERE "ccr"."TenantId" = "tenantId"
+      AND "ccr"."EmployeeId" = "employeeId"
+      AND ("divisionId" IS NULL        OR "ccr"."DivisionId" = "divisionId")
+      AND ("payrunJobId" IS NULL       OR "ccr"."PayrunJobId" = "payrunJobId")
+      AND ("parentPayrunJobId" IS NULL OR "ccr"."ParentJobId" = "parentPayrunJobId")
+      AND ("collectorNameHashes" IS NULL OR v_collectorCount = 0
            OR (v_collectorCount = 1 AND "ccr"."CollectorNameHash" = v_collectorNameHash)
            OR (v_collectorCount > 1 AND "ccr"."CollectorNameHash" IN (
                SELECT CAST(jt.val AS INT)
-               FROM jsonb_array_elements_text(collectorNameHashes::jsonb) AS jt(val))))
-      AND (periodStart IS NULL OR "ccr"."Start" BETWEEN periodStart AND periodEnd)
-      AND (jobStatus IS NULL OR "ccr"."PayrunJobId" IN (
+               FROM jsonb_array_elements_text("collectorNameHashes"::jsonb) AS jt(val))))
+      AND ("periodStart" IS NULL OR "ccr"."Start" BETWEEN "periodStart" AND "periodEnd")
+      AND ("jobStatus" IS NULL OR "ccr"."PayrunJobId" IN (
                SELECT "pj"."Id" FROM "PayrunJob" "pj"
                WHERE "pj"."Id" = "ccr"."PayrunJobId"
-                 AND "pj"."JobStatus" = jobStatus))
-      AND ("ccr"."Forecast" IS NULL OR "ccr"."Forecast" = forecast)
-      AND (evaluationDate IS NULL OR "ccr"."Created" <= evaluationDate)
+                 AND "pj"."JobStatus" = "jobStatus"))
+      AND ("ccr"."Forecast" IS NULL OR "ccr"."Forecast" = "forecast")
+      AND ("evaluationDate" IS NULL OR "ccr"."Created" <= "evaluationDate")
     ORDER BY "ccr"."Created";
 END;
 $$;
@@ -2483,35 +2483,35 @@ DECLARE
     v_collectorNameHash INT;
     v_collectorCount    INT;
 BEGIN
-    v_collectorCount := CASE WHEN collectorNameHashes IS NULL THEN 0
-                             ELSE jsonb_array_length(collectorNameHashes::jsonb) END;
+    v_collectorCount := CASE WHEN "collectorNameHashes" IS NULL THEN 0
+                             ELSE jsonb_array_length("collectorNameHashes"::jsonb) END;
 
     IF v_collectorCount = 1 THEN
         SELECT CAST(jt.val AS INT) INTO v_collectorNameHash
-        FROM jsonb_array_elements_text(collectorNameHashes::jsonb) AS jt(val)
+        FROM jsonb_array_elements_text("collectorNameHashes"::jsonb) AS jt(val)
         LIMIT 1;
     END IF;
 
     RETURN QUERY
     SELECT "cr".*
     FROM "CollectorResult" "cr"
-    WHERE "cr"."TenantId" = tenantId
-      AND "cr"."EmployeeId" = employeeId
-      AND (divisionId IS NULL        OR "cr"."DivisionId" = divisionId)
-      AND (payrunJobId IS NULL       OR "cr"."PayrunJobId" = payrunJobId)
-      AND (parentPayrunJobId IS NULL OR "cr"."ParentJobId" = parentPayrunJobId)
-      AND (collectorNameHashes IS NULL OR v_collectorCount = 0
+    WHERE "cr"."TenantId" = "tenantId"
+      AND "cr"."EmployeeId" = "employeeId"
+      AND ("divisionId" IS NULL        OR "cr"."DivisionId" = "divisionId")
+      AND ("payrunJobId" IS NULL       OR "cr"."PayrunJobId" = "payrunJobId")
+      AND ("parentPayrunJobId" IS NULL OR "cr"."ParentJobId" = "parentPayrunJobId")
+      AND ("collectorNameHashes" IS NULL OR v_collectorCount = 0
            OR (v_collectorCount = 1 AND "cr"."CollectorNameHash" = v_collectorNameHash)
            OR (v_collectorCount > 1 AND "cr"."CollectorNameHash" IN (
                SELECT CAST(jt.val AS INT)
-               FROM jsonb_array_elements_text(collectorNameHashes::jsonb) AS jt(val))))
-      AND (periodStart IS NULL OR "cr"."Start" BETWEEN periodStart AND periodEnd)
-      AND (jobStatus IS NULL OR "cr"."PayrunJobId" IN (
+               FROM jsonb_array_elements_text("collectorNameHashes"::jsonb) AS jt(val))))
+      AND ("periodStart" IS NULL OR "cr"."Start" BETWEEN "periodStart" AND "periodEnd")
+      AND ("jobStatus" IS NULL OR "cr"."PayrunJobId" IN (
                SELECT "pj"."Id" FROM "PayrunJob" "pj"
                WHERE "pj"."Id" = "cr"."PayrunJobId"
-                 AND "pj"."JobStatus" = jobStatus))
-      AND ("cr"."Forecast" IS NULL OR "cr"."Forecast" = forecast)
-      AND (evaluationDate IS NULL OR "cr"."Created" <= evaluationDate)
+                 AND "pj"."JobStatus" = "jobStatus"))
+      AND ("cr"."Forecast" IS NULL OR "cr"."Forecast" = "forecast")
+      AND ("evaluationDate" IS NULL OR "cr"."Created" <= "evaluationDate")
     ORDER BY "cr"."Created";
 END;
 $$;
@@ -4702,20 +4702,20 @@ DECLARE
     v_where     TEXT;
     v_fullSql   TEXT;
 BEGIN
-    v_attrNames := "GetAttributeNames"(attributes);
+    v_attrNames := GetAttributeNames("attributes");
 
     -- Build optional WHERE clause (employee / division pre-filter inside the pivot)
     v_where := '';
-    IF employeeId IS NOT NULL OR divisionId IS NOT NULL THEN
+    IF "employeeId" IS NOT NULL OR "divisionId" IS NOT NULL THEN
         v_where := ' WHERE ';
-        IF employeeId IS NOT NULL THEN
-            v_where := v_where || '"Employee"."Id" = ' || employeeId::TEXT;
+        IF "employeeId" IS NOT NULL THEN
+            v_where := v_where || '"Employee"."Id" = ' || "employeeId"::TEXT;
         END IF;
-        IF employeeId IS NOT NULL AND divisionId IS NOT NULL THEN
+        IF "employeeId" IS NOT NULL AND "divisionId" IS NOT NULL THEN
             v_where := v_where || ' AND ';
         END IF;
-        IF divisionId IS NOT NULL THEN
-            v_where := v_where || '"Division"."Id" = ' || divisionId::TEXT;
+        IF "divisionId" IS NOT NULL THEN
+            v_where := v_where || '"Division"."Id" = ' || "divisionId"::TEXT;
         END IF;
     END IF;
 
@@ -4777,7 +4777,7 @@ BEGIN
         || ' to_char("CollectorResult"."Value", ''FM999999999999999999990.00'') AS "ResultValue",'
         || ' "CollectorResult"."Value" AS "ResultNumericValue",'
         || ' "CollectorResult"."Culture" AS "ResultCulture"'
-        || "BuildAttributeQuery"('"CollectorResult"."Attributes"', attributes)
+        || BuildAttributeQuery('"CollectorResult"."Attributes"', "attributes")
         || ' FROM "CollectorResult"'
         || ' UNION ALL'
         -- CollectorCustomResult (kind=11)
@@ -4796,7 +4796,7 @@ BEGIN
         || ' to_char("CollectorCustomResult"."Value", ''FM999999999999999999990.00'') AS "ResultValue",'
         || ' "CollectorCustomResult"."Value" AS "ResultNumericValue",'
         || ' "CollectorCustomResult"."Culture" AS "ResultCulture"'
-        || "BuildAttributeQuery"('"CollectorCustomResult"."Attributes"', attributes)
+        || BuildAttributeQuery('"CollectorCustomResult"."Attributes"', "attributes")
         || ' FROM "CollectorResult"'
         || ' INNER JOIN "CollectorCustomResult" ON "CollectorResult"."Id" = "CollectorCustomResult"."CollectorResultId"'
         || ' UNION ALL'
@@ -4816,7 +4816,7 @@ BEGIN
         || ' to_char("WageTypeResult"."Value", ''FM999999999999999999990.00'') AS "ResultValue",'
         || ' "WageTypeResult"."Value" AS "ResultNumericValue",'
         || ' "WageTypeResult"."Culture" AS "ResultCulture"'
-        || "BuildAttributeQuery"('"WageTypeResult"."Attributes"', attributes)
+        || BuildAttributeQuery('"WageTypeResult"."Attributes"', "attributes")
         || ' FROM "WageTypeResult"'
         || ' UNION ALL'
         -- WageTypeCustomResult (kind=21)
@@ -4835,7 +4835,7 @@ BEGIN
         || ' to_char("WageTypeCustomResult"."Value", ''FM999999999999999999990.00'') AS "ResultValue",'
         || ' "WageTypeCustomResult"."Value" AS "ResultNumericValue",'
         || ' "WageTypeCustomResult"."Culture" AS "ResultCulture"'
-        || "BuildAttributeQuery"('"WageTypeCustomResult"."Attributes"', attributes)
+        || BuildAttributeQuery('"WageTypeCustomResult"."Attributes"', "attributes")
         || ' FROM "WageTypeResult"'
         || ' INNER JOIN "WageTypeCustomResult" ON "WageTypeResult"."Id" = "WageTypeCustomResult"."WageTypeResultId"'
         || ' UNION ALL'
@@ -4855,7 +4855,7 @@ BEGIN
         || ' LTRIM("PayrunResult"."Value") AS "ResultValue",'
         || ' "PayrunResult"."NumericValue" AS "ResultNumericValue",'
         || ' "PayrunResult"."Culture" AS "ResultCulture"'
-        || "BuildAttributeQuery"(NULL, attributes)
+        || BuildAttributeQuery(NULL, "attributes")
         || ' FROM "PayrunResult"'
         || ') "PayrollValue"'
         || ' LEFT JOIN "PayrollResult" ON "PayrollResult"."Id" = "PayrollValue"."PayrollResultId"'
@@ -4868,7 +4868,7 @@ BEGIN
         || v_where;
 
     -- Wrap pivot as CTE under "##PayrollResultPivot" so the caller sql resolves it
-    v_fullSql := 'WITH "##PayrollResultPivot" AS (' || v_innerSql || ') ' || sql;
+    v_fullSql := 'WITH "##PayrollResultPivot" AS (' || v_innerSql || ') ' || "sql";
 
     RETURN QUERY EXECUTE v_fullSql;
 END;
@@ -4924,35 +4924,35 @@ DECLARE
     v_wageTypeNumber DECIMAL(28,6);
     v_wageTypeCount  INT;
 BEGIN
-    v_wageTypeCount := CASE WHEN wageTypeNumbers IS NULL THEN 0
-                            ELSE jsonb_array_length(wageTypeNumbers::jsonb) END;
+    v_wageTypeCount := CASE WHEN "wageTypeNumbers" IS NULL THEN 0
+                            ELSE jsonb_array_length("wageTypeNumbers"::jsonb) END;
 
     IF v_wageTypeCount = 1 THEN
         SELECT CAST(jt.val AS DECIMAL(28,6)) INTO v_wageTypeNumber
-        FROM jsonb_array_elements_text(wageTypeNumbers::jsonb) AS jt(val)
+        FROM jsonb_array_elements_text("wageTypeNumbers"::jsonb) AS jt(val)
         LIMIT 1;
     END IF;
 
     RETURN QUERY
     SELECT "wtcr".*
     FROM "WageTypeCustomResult" "wtcr"
-    WHERE "wtcr"."TenantId" = tenantId
-      AND "wtcr"."EmployeeId" = employeeId
-      AND (divisionId IS NULL        OR "wtcr"."DivisionId" = divisionId)
-      AND (payrunJobId IS NULL       OR "wtcr"."PayrunJobId" = payrunJobId)
-      AND (parentPayrunJobId IS NULL OR "wtcr"."ParentJobId" = parentPayrunJobId)
-      AND (wageTypeNumbers IS NULL OR v_wageTypeCount = 0
+    WHERE "wtcr"."TenantId" = "tenantId"
+      AND "wtcr"."EmployeeId" = "employeeId"
+      AND ("divisionId" IS NULL        OR "wtcr"."DivisionId" = "divisionId")
+      AND ("payrunJobId" IS NULL       OR "wtcr"."PayrunJobId" = "payrunJobId")
+      AND ("parentPayrunJobId" IS NULL OR "wtcr"."ParentJobId" = "parentPayrunJobId")
+      AND ("wageTypeNumbers" IS NULL OR v_wageTypeCount = 0
            OR (v_wageTypeCount = 1 AND "wtcr"."WageTypeNumber" = v_wageTypeNumber)
            OR (v_wageTypeCount > 1 AND "wtcr"."WageTypeNumber" IN (
                SELECT CAST(jt.val AS DECIMAL(28,6))
-               FROM jsonb_array_elements_text(wageTypeNumbers::jsonb) AS jt(val))))
-      AND (periodStart IS NULL OR "wtcr"."Start" BETWEEN periodStart AND periodEnd)
-      AND (jobStatus IS NULL OR "wtcr"."PayrunJobId" IN (
+               FROM jsonb_array_elements_text("wageTypeNumbers"::jsonb) AS jt(val))))
+      AND ("periodStart" IS NULL OR "wtcr"."Start" BETWEEN "periodStart" AND "periodEnd")
+      AND ("jobStatus" IS NULL OR "wtcr"."PayrunJobId" IN (
                SELECT "pj"."Id" FROM "PayrunJob" "pj"
                WHERE "pj"."Id" = "wtcr"."PayrunJobId"
-                 AND "pj"."JobStatus" = jobStatus))
-      AND ("wtcr"."Forecast" IS NULL OR "wtcr"."Forecast" = forecast)
-      AND (evaluationDate IS NULL OR "wtcr"."Created" <= evaluationDate)
+                 AND "pj"."JobStatus" = "jobStatus"))
+      AND ("wtcr"."Forecast" IS NULL OR "wtcr"."Forecast" = "forecast")
+      AND ("evaluationDate" IS NULL OR "wtcr"."Created" <= "evaluationDate")
     ORDER BY "wtcr"."Created";
 END;
 $$;
@@ -5007,35 +5007,35 @@ DECLARE
     v_wageTypeNumber DECIMAL(28,6);
     v_wageTypeCount  INT;
 BEGIN
-    v_wageTypeCount := CASE WHEN wageTypeNumbers IS NULL THEN 0
-                            ELSE jsonb_array_length(wageTypeNumbers::jsonb) END;
+    v_wageTypeCount := CASE WHEN "wageTypeNumbers" IS NULL THEN 0
+                            ELSE jsonb_array_length("wageTypeNumbers"::jsonb) END;
 
     IF v_wageTypeCount = 1 THEN
         SELECT CAST(jt.val AS DECIMAL(28,6)) INTO v_wageTypeNumber
-        FROM jsonb_array_elements_text(wageTypeNumbers::jsonb) AS jt(val)
+        FROM jsonb_array_elements_text("wageTypeNumbers"::jsonb) AS jt(val)
         LIMIT 1;
     END IF;
 
     RETURN QUERY
     SELECT "wtr".*
     FROM "WageTypeResult" "wtr"
-    WHERE "wtr"."TenantId" = tenantId
-      AND "wtr"."EmployeeId" = employeeId
-      AND (divisionId IS NULL        OR "wtr"."DivisionId" = divisionId)
-      AND (payrunJobId IS NULL       OR "wtr"."PayrunJobId" = payrunJobId)
-      AND (parentPayrunJobId IS NULL OR "wtr"."ParentJobId" = parentPayrunJobId)
-      AND (wageTypeNumbers IS NULL OR v_wageTypeCount = 0
+    WHERE "wtr"."TenantId" = "tenantId"
+      AND "wtr"."EmployeeId" = "employeeId"
+      AND ("divisionId" IS NULL        OR "wtr"."DivisionId" = "divisionId")
+      AND ("payrunJobId" IS NULL       OR "wtr"."PayrunJobId" = "payrunJobId")
+      AND ("parentPayrunJobId" IS NULL OR "wtr"."ParentJobId" = "parentPayrunJobId")
+      AND ("wageTypeNumbers" IS NULL OR v_wageTypeCount = 0
            OR (v_wageTypeCount = 1 AND "wtr"."WageTypeNumber" = v_wageTypeNumber)
            OR (v_wageTypeCount > 1 AND "wtr"."WageTypeNumber" IN (
                SELECT CAST(jt.val AS DECIMAL(28,6))
-               FROM jsonb_array_elements_text(wageTypeNumbers::jsonb) AS jt(val))))
-      AND (periodStart IS NULL OR "wtr"."Start" BETWEEN periodStart AND periodEnd)
-      AND (jobStatus IS NULL OR "wtr"."PayrunJobId" IN (
+               FROM jsonb_array_elements_text("wageTypeNumbers"::jsonb) AS jt(val))))
+      AND ("periodStart" IS NULL OR "wtr"."Start" BETWEEN "periodStart" AND "periodEnd")
+      AND ("jobStatus" IS NULL OR "wtr"."PayrunJobId" IN (
                SELECT "pj"."Id" FROM "PayrunJob" "pj"
                WHERE "pj"."Id" = "wtr"."PayrunJobId"
-                 AND "pj"."JobStatus" = jobStatus))
-      AND ("wtr"."Forecast" IS NULL OR "wtr"."Forecast" = forecast)
-      AND (evaluationDate IS NULL OR "wtr"."Created" <= evaluationDate)
+                 AND "pj"."JobStatus" = "jobStatus"))
+      AND ("wtr"."Forecast" IS NULL OR "wtr"."Forecast" = "forecast")
+      AND ("evaluationDate" IS NULL OR "wtr"."Created" <= "evaluationDate")
     ORDER BY "wtr"."Created";
 END;
 $$;

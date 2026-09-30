@@ -61,20 +61,20 @@ DECLARE
     v_where     TEXT;
     v_fullSql   TEXT;
 BEGIN
-    v_attrNames := "GetAttributeNames"(attributes);
+    v_attrNames := GetAttributeNames("attributes");
 
     -- Build optional WHERE clause (employee / division pre-filter inside the pivot)
     v_where := '';
-    IF employeeId IS NOT NULL OR divisionId IS NOT NULL THEN
+    IF "employeeId" IS NOT NULL OR "divisionId" IS NOT NULL THEN
         v_where := ' WHERE ';
-        IF employeeId IS NOT NULL THEN
-            v_where := v_where || '"Employee"."Id" = ' || employeeId::TEXT;
+        IF "employeeId" IS NOT NULL THEN
+            v_where := v_where || '"Employee"."Id" = ' || "employeeId"::TEXT;
         END IF;
-        IF employeeId IS NOT NULL AND divisionId IS NOT NULL THEN
+        IF "employeeId" IS NOT NULL AND "divisionId" IS NOT NULL THEN
             v_where := v_where || ' AND ';
         END IF;
-        IF divisionId IS NOT NULL THEN
-            v_where := v_where || '"Division"."Id" = ' || divisionId::TEXT;
+        IF "divisionId" IS NOT NULL THEN
+            v_where := v_where || '"Division"."Id" = ' || "divisionId"::TEXT;
         END IF;
     END IF;
 
@@ -136,7 +136,7 @@ BEGIN
         || ' to_char("CollectorResult"."Value", ''FM999999999999999999990.00'') AS "ResultValue",'
         || ' "CollectorResult"."Value" AS "ResultNumericValue",'
         || ' "CollectorResult"."Culture" AS "ResultCulture"'
-        || "BuildAttributeQuery"('"CollectorResult"."Attributes"', attributes)
+        || BuildAttributeQuery('"CollectorResult"."Attributes"', "attributes")
         || ' FROM "CollectorResult"'
         || ' UNION ALL'
         -- CollectorCustomResult (kind=11)
@@ -155,7 +155,7 @@ BEGIN
         || ' to_char("CollectorCustomResult"."Value", ''FM999999999999999999990.00'') AS "ResultValue",'
         || ' "CollectorCustomResult"."Value" AS "ResultNumericValue",'
         || ' "CollectorCustomResult"."Culture" AS "ResultCulture"'
-        || "BuildAttributeQuery"('"CollectorCustomResult"."Attributes"', attributes)
+        || BuildAttributeQuery('"CollectorCustomResult"."Attributes"', "attributes")
         || ' FROM "CollectorResult"'
         || ' INNER JOIN "CollectorCustomResult" ON "CollectorResult"."Id" = "CollectorCustomResult"."CollectorResultId"'
         || ' UNION ALL'
@@ -175,7 +175,7 @@ BEGIN
         || ' to_char("WageTypeResult"."Value", ''FM999999999999999999990.00'') AS "ResultValue",'
         || ' "WageTypeResult"."Value" AS "ResultNumericValue",'
         || ' "WageTypeResult"."Culture" AS "ResultCulture"'
-        || "BuildAttributeQuery"('"WageTypeResult"."Attributes"', attributes)
+        || BuildAttributeQuery('"WageTypeResult"."Attributes"', "attributes")
         || ' FROM "WageTypeResult"'
         || ' UNION ALL'
         -- WageTypeCustomResult (kind=21)
@@ -194,7 +194,7 @@ BEGIN
         || ' to_char("WageTypeCustomResult"."Value", ''FM999999999999999999990.00'') AS "ResultValue",'
         || ' "WageTypeCustomResult"."Value" AS "ResultNumericValue",'
         || ' "WageTypeCustomResult"."Culture" AS "ResultCulture"'
-        || "BuildAttributeQuery"('"WageTypeCustomResult"."Attributes"', attributes)
+        || BuildAttributeQuery('"WageTypeCustomResult"."Attributes"', "attributes")
         || ' FROM "WageTypeResult"'
         || ' INNER JOIN "WageTypeCustomResult" ON "WageTypeResult"."Id" = "WageTypeCustomResult"."WageTypeResultId"'
         || ' UNION ALL'
@@ -214,7 +214,7 @@ BEGIN
         || ' LTRIM("PayrunResult"."Value") AS "ResultValue",'
         || ' "PayrunResult"."NumericValue" AS "ResultNumericValue",'
         || ' "PayrunResult"."Culture" AS "ResultCulture"'
-        || "BuildAttributeQuery"(NULL, attributes)
+        || BuildAttributeQuery(NULL, "attributes")
         || ' FROM "PayrunResult"'
         || ') "PayrollValue"'
         || ' LEFT JOIN "PayrollResult" ON "PayrollResult"."Id" = "PayrollValue"."PayrollResultId"'
@@ -227,7 +227,7 @@ BEGIN
         || v_where;
 
     -- Wrap pivot as CTE under "##PayrollResultPivot" so the caller sql resolves it
-    v_fullSql := 'WITH "##PayrollResultPivot" AS (' || v_innerSql || ') ' || sql;
+    v_fullSql := 'WITH "##PayrollResultPivot" AS (' || v_innerSql || ') ' || "sql";
 
     RETURN QUERY EXECUTE v_fullSql;
 END;
