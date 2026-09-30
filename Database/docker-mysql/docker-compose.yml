@@ -1,14 +1,14 @@
 services:
   mysql:
-    image: mysql:8.0
-    container_name: pe-mysql
+    image: ${MYSQL_IMAGE:-mysql:8.0}
+    container_name: ${MYSQL_CONTAINER:-pe-mysql}
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-poc123}
     ports:
       - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - pe-mysql-data:/var/lib/mysql
-      - ./init:/docker-entrypoint-initdb.d:ro
+      - ../Create-Model.mysql.sql:/docker-entrypoint-initdb.d/01-Create-Model.mysql.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-poc123}"]
       interval: 10s

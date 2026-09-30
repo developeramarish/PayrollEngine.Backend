@@ -1,7 +1,7 @@
 -- =============================================================================
 -- Create-Model.pg.sql
 -- PostgreSQL schema for PayrollEngine 14+ (16 LTS recommended).
--- Schema version: 1.0.0
+-- Schema version: 1.0.1
 -- NOTE: All table names are double-quoted for C# SqlKata compatibility.
 -- =============================================================================
 

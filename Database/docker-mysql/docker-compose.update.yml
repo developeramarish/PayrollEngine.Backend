@@ -1,0 +1,10 @@
+# Update scenario: initializes the previous release schema as migration baseline.
+# Adjust the History path on each release.
+services:
+  mysql:
+    container_name: ${MYSQL_CONTAINER:-pe-mysql-upd}
+    ports: !override
+      - "${MYSQL_PORT:-3307}:3306"
+    volumes: !override
+      - pe-mysql-data:/var/lib/mysql
+      - ../History/v1.0.0/Create-Model.mysql.sql:/docker-entrypoint-initdb.d/01-Create-Model.mysql.sql:ro
