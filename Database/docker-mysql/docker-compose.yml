@@ -10,7 +10,7 @@ services:
       - pe-mysql-data:/var/lib/mysql
       - ../Create-Model.mysql.sql:/docker-entrypoint-initdb.d/01-Create-Model.mysql.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-poc123}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-poc123}"]
       interval: 10s
       timeout: 5s
       retries: 5

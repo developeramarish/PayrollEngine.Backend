@@ -1,2 +1,4 @@
 @echo off
-docker compose down -v
+pushd "%~dp0"
+docker compose -p pe-full down -v
+popd

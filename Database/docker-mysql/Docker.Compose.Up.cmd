@@ -1,2 +1,4 @@
 @echo off
-docker compose up -d --wait
+pushd "%~dp0"
+docker compose -p pe-full up -d --wait
+popd
