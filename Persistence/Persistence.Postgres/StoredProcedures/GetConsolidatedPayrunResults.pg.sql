@@ -70,7 +70,7 @@ BEGIN
                 SELECT pj."Id" FROM "PayrunJob" pj
                 WHERE pj."JobStatus" = "jobStatus"))
           AND (r."Forecast" IS NULL OR r."Forecast" = "forecast")
-          AND ("noRetro" = FALSE OR r."ParentJobId" IS NULL)
+          AND (COALESCE("noRetro", FALSE) = FALSE OR r."ParentJobId" IS NULL)
           AND ("excludeParentJobId" IS NULL OR r."ParentJobId" IS NULL
                OR r."ParentJobId" <> "excludeParentJobId")
     )

@@ -40,6 +40,10 @@ public class DbContext : IDbContext
     /// <summary>Shared connections per ambient TransactionScope.</summary>
     private readonly ConcurrentDictionary<string, NpgsqlConnection> scopedConnections = new();
 
+    /// <summary>Routine signatures by case-insensitive routine name.</summary>
+    private readonly ConcurrentDictionary<string, RoutineSignature> routineSignatures =
+        new(StringComparer.OrdinalIgnoreCase);
+
     /// <summary>
     /// New database connection
     /// </summary>
@@ -353,99 +357,10 @@ public class DbContext : IDbContext
         int? commandTimeout = null, CommandType? commandType = null)
     {
         using var lease = LeaseConnection();
-        // Convert Get* query stored procs to SELECT * FROM function calls
-        // (PostgreSQL procedures don't return result sets via CALL in Npgsql)
-        if (commandType == CommandType.StoredProcedure && param is DbParameterCollection dbParams
-            && sql.StartsWith("Get", StringComparison.OrdinalIgnoreCase))
-        {
-            var funcSql = BuildFunctionCallSql(sql, dbParams);
-            return await lease.Connection.QueryAsync<T>(funcSql, param,
-                commandTimeout: commandTimeout ?? DefaultCommendTimeout,
-                commandType: CommandType.Text);
-        }
+        (sql, commandType) = await BuildRoutineCallAsync(lease.Connection, sql, param, commandType);
         return await lease.Connection.QueryAsync<T>(sql, param,
             commandTimeout: commandTimeout ?? DefaultCommendTimeout,
             commandType: commandType);
-    }
-
-    private static string BuildFunctionCallSql(string spName, DbParameterCollection dbParams)
-    {
-        var parts = new List<string>();
-        foreach (var name in dbParams.ParameterNames)
-        {
-            if (name.Equals("@RETURN_VALUE", StringComparison.OrdinalIgnoreCase) ||
-                name.Equals("@returnValue", StringComparison.OrdinalIgnoreCase))
-                continue;
-            parts.Add(name.StartsWith('@') ? name : $"@{name}");
-        }
-        return $"SELECT * FROM {spName}({string.Join(", ", parts)})";
-    }
-
-    private static NpgsqlTypes.NpgsqlDbType InferPgTypeFromValue(object value)
-    {
-        if (value == null || value == DBNull.Value)
-            return NpgsqlTypes.NpgsqlDbType.Text;
-        return value switch
-        {
-            int or long or short => NpgsqlTypes.NpgsqlDbType.Integer,
-            decimal or double or float => NpgsqlTypes.NpgsqlDbType.Numeric,
-            string => NpgsqlTypes.NpgsqlDbType.Text,
-            DateTime => NpgsqlTypes.NpgsqlDbType.Timestamp,
-            bool => NpgsqlTypes.NpgsqlDbType.Boolean,
-            Guid => NpgsqlTypes.NpgsqlDbType.Uuid,
-            _ => NpgsqlTypes.NpgsqlDbType.Text
-        };
-    }
-
-    private async Task<IEnumerable<T>> QuerySpAsync<T>(IDbConnection conn, string spName,
-        object param, int? commandTimeout)
-    {
-        var callSql = BuildCallSql(spName, param);
-        return await ((NpgsqlConnection)conn).QueryAsync<T>(callSql, param,
-            commandTimeout: commandTimeout ?? DefaultCommendTimeout);
-    }
-
-    private static string BuildCallSql(string spName, object param)
-    {
-        if (param is not DbParameterCollection dbParams)
-        {
-            return $"CALL \"{spName}\"()";
-        }
-
-        var names = dbParams.ParameterNames.ToList();
-        var parts = new List<string>();
-        for (int i = 0; i < names.Count; i++)
-        {
-            var name = names[i];
-            var isReturnValue = name.StartsWith("@", StringComparison.Ordinal) &&
-                                name.Contains("return", StringComparison.OrdinalIgnoreCase);
-            if (isReturnValue) continue;
-
-            var cleanName = name.TrimStart('@');
-            // Infer PostgreSQL type from the parameter value's CLR type
-            // (DbParameterCollection.GetParameterType is unreliable with Dapper)
-            object value = null;
-            try { value = dbParams.Get<object>(name); } catch { }
-            var pgType = InferPgType(value);
-            parts.Add($"@{cleanName}::{pgType}");
-        }
-        return $"CALL {spName}({string.Join(", ", parts)})";
-    }
-
-    private static string InferPgType(object value)
-    {
-        if (value == null || value == DBNull.Value)
-            return "text";
-        return value switch
-        {
-            int or long or short => "integer",
-            decimal or double or float => "numeric",
-            string => "text",
-            DateTime => "timestamp",
-            bool => "boolean",
-            Guid => "uuid",
-            _ => "text"
-        };
     }
 
     /// <inheritdoc />
@@ -453,12 +368,7 @@ public class DbContext : IDbContext
         int? commandTimeout = null, CommandType? commandType = null)
     {
         using var lease = LeaseConnection();
-        if (commandType == CommandType.StoredProcedure)
-        {
-            var callSql = BuildCallSql(sql, param);
-            return await lease.Connection.ExecuteAsync(callSql, param,
-                commandTimeout: commandTimeout ?? DefaultCommendTimeout);
-        }
+        (sql, commandType) = await BuildRoutineCallAsync(lease.Connection, sql, param, commandType);
         return await lease.Connection.ExecuteAsync(sql, param,
             commandTimeout: commandTimeout ?? DefaultCommendTimeout,
             commandType: commandType);
@@ -469,6 +379,7 @@ public class DbContext : IDbContext
         int? commandTimeout = null, CommandType? commandType = null)
     {
         using var lease = LeaseConnection();
+        (sql, commandType) = await BuildRoutineCallAsync(lease.Connection, sql, param, commandType);
         return await lease.Connection.QueryFirstAsync<T>(sql, param,
             commandTimeout: commandTimeout ?? DefaultCommendTimeout,
             commandType: commandType);
@@ -479,6 +390,7 @@ public class DbContext : IDbContext
         int? commandTimeout = null, CommandType? commandType = null)
     {
         using var lease = LeaseConnection();
+        (sql, commandType) = await BuildRoutineCallAsync(lease.Connection, sql, param, commandType);
         return await lease.Connection.QuerySingleAsync<T>(sql, param,
             commandTimeout: commandTimeout ?? DefaultCommendTimeout,
             commandType: commandType);
@@ -489,6 +401,7 @@ public class DbContext : IDbContext
         int? commandTimeout = null, CommandType? commandType = null)
     {
         using var lease = LeaseConnection();
+        (sql, commandType) = await BuildRoutineCallAsync(lease.Connection, sql, param, commandType);
         return await lease.Connection.ExecuteScalarAsync<T>(sql, param,
             commandTimeout: commandTimeout ?? DefaultCommendTimeout,
             commandType: commandType);
@@ -499,9 +412,104 @@ public class DbContext : IDbContext
         int? commandTimeout = null, CommandType? commandType = null)
     {
         using var lease = LeaseConnection();
+        (sql, commandType) = await BuildRoutineCallAsync(lease.Connection, sql, param, commandType);
         await lease.Connection.ExecuteAsync(sql, param,
             commandTimeout: commandTimeout ?? DefaultCommendTimeout,
             commandType: commandType);
+    }
+
+    #endregion
+
+    #region Routine Calls
+
+    /// <summary>Input signature of a stored function or procedure</summary>
+    private sealed record RoutineSignature(string Name, bool IsFunction,
+        IReadOnlyList<string> ArgumentNames, IReadOnlyList<string> ArgumentTypes);
+
+    /// <summary>Convert a stored procedure command into a positional function or procedure call.
+    /// Arguments are ordered by the database signature: parameters unknown to the routine
+    /// are ignored and missing arguments are passed as typed NULL.</summary>
+    private async Task<(string Sql, CommandType? CommandType)> BuildRoutineCallAsync(
+        IDbConnection connection, string sql, object param, CommandType? commandType)
+    {
+        if (commandType != CommandType.StoredProcedure)
+        {
+            return (sql, commandType);
+        }
+
+        var signature = await GetRoutineSignatureAsync(connection, sql);
+        var parameterNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (param is DynamicParameters dynamicParameters)
+        {
+            foreach (var name in dynamicParameters.ParameterNames)
+            {
+                parameterNames.Add(name.TrimStart('@'));
+            }
+        }
+
+        var arguments = new List<string>();
+        for (var i = 0; i < signature.ArgumentNames.Count; i++)
+        {
+            var type = signature.ArgumentTypes[i];
+            // procedure arguments use the p_ prefix (p_tenantId for @tenantId)
+            var name = signature.ArgumentNames[i];
+            if (name != null && !parameterNames.Contains(name) &&
+                name.StartsWith("p_", StringComparison.OrdinalIgnoreCase))
+            {
+                name = name[2..];
+            }
+            var parameterName = name == null ? null : parameterNames.FirstOrDefault(
+                x => string.Equals(x, name, StringComparison.OrdinalIgnoreCase));
+            arguments.Add(parameterName != null
+                ? $"@{parameterName}::{type}"
+                : $"NULL::{type}");
+        }
+
+        var routine = $"\"{signature.Name}\"({string.Join(", ", arguments)})";
+        var callSql = signature.IsFunction ? $"SELECT * FROM {routine}" : $"CALL {routine}";
+        return (callSql, CommandType.Text);
+    }
+
+    /// <summary>Get the routine signature from the system catalog (cached)</summary>
+    private async Task<RoutineSignature> GetRoutineSignatureAsync(IDbConnection connection, string routineName)
+    {
+        if (routineSignatures.TryGetValue(routineName, out var cached))
+        {
+            return cached;
+        }
+
+        // input arguments: modes IN, INOUT and VARIADIC (null modes = all arguments are IN)
+        const string query =
+            """
+            SELECT p.proname AS "Name",
+                   p.prokind = 'f' AS "IsFunction",
+                   ARRAY(SELECT a.name
+                         FROM unnest(COALESCE(p.proargnames, array_fill(NULL::text, ARRAY[p.pronargs::int])),
+                                     COALESCE(p.proargmodes, array_fill('i'::"char", ARRAY[p.pronargs::int])))
+                              WITH ORDINALITY AS a(name, mode, n)
+                         WHERE a.mode IN ('i', 'b', 'v')
+                         ORDER BY a.n) AS "ArgumentNames",
+                   ARRAY(SELECT format_type(t.oid, NULL)
+                         FROM unnest(p.proargtypes::oid[]) WITH ORDINALITY AS t(oid, n)
+                         ORDER BY t.n) AS "ArgumentTypes"
+            FROM pg_proc p
+            INNER JOIN pg_namespace ns ON ns.oid = p.pronamespace
+            WHERE ns.nspname = current_schema()
+              AND lower(p.proname) = lower(@routineName)
+              AND p.prokind IN ('f', 'p')
+            ORDER BY (p.proname = @routineName) DESC
+            LIMIT 1
+            """;
+        var row = await connection.QueryFirstOrDefaultAsync<(string Name, bool IsFunction,
+            string[] ArgumentNames, string[] ArgumentTypes)>(query, new { routineName });
+        if (row.Name == null)
+        {
+            throw new InvalidOperationException($"Unknown stored routine {routineName}.");
+        }
+
+        var signature = new RoutineSignature(row.Name, row.IsFunction, row.ArgumentNames, row.ArgumentTypes);
+        routineSignatures.TryAdd(routineName, signature);
+        return signature;
     }
 
     #endregion
