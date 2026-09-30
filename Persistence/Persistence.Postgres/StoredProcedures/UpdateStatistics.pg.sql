@@ -13,7 +13,7 @@ BEGIN
         SELECT tablename FROM pg_catalog.pg_tables
         WHERE schemaname = 'public'
     LOOP
-        EXECUTE 'ANALYZE ' || v_table;
+        EXECUTE format('ANALYZE %I', v_table);
     END LOOP;
 END;
 $$;

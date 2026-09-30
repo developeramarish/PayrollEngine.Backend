@@ -535,7 +535,10 @@ public class DbContext : IDbContext
         var table = $"\"{dataTable.TableName}\"";
         const int batchSize = 500;
         var rows = dataTable.Rows.Cast<DataRow>().ToList();
-        var cols = dataTable.Columns.Cast<DataColumn>().ToList();
+        // identity columns are GENERATED ALWAYS and reject explicit values
+        var cols = dataTable.Columns.Cast<DataColumn>()
+            .Where(c => c.ColumnName != DbSchema.ObjectColumn.Id)
+            .ToList();
         var colList = string.Join(",", cols.Select(c => $"\"{c.ColumnName}\""));
 
         var transaction = Transaction.Current;

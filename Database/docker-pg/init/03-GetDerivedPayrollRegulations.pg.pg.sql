@@ -17,9 +17,7 @@ LANGUAGE sql STABLE AS $$
         INNER JOIN "Regulation" r ON pl."RegulationName" = r."Name"
         WHERE r."Status" = 0
           AND (r."TenantId" = "tenantId"
-              OR (r."SharedRegulation" = true
-              -- Match by regulation NAME so a single RegulationShare entry covers all
-              -- ValidFrom versions of the same regulation family (e.g. 2025 and 2026).
+            OR (r."SharedRegulation" = true
               AND EXISTS (SELECT 1 FROM "RegulationShare" rs
                           INNER JOIN "Regulation" rp ON rs."ProviderRegulationId" = rp."Id"
                           WHERE rp."Name" = r."Name" AND rs."ConsumerTenantId" = "tenantId" AND rs."IsolationLevel" >= 3)))
