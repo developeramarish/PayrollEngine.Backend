@@ -15,7 +15,7 @@ public class WageTypeRepository(IRegulationRepository regulationRepository,
 {
     protected override void GetObjectCreateData(WageType wageType, DbParameterCollection parameters)
     {
-        parameters.Add(nameof(wageType.WageTypeNumber), wageType.WageTypeNumber);
+        parameters.Add(nameof(wageType.WageTypeNumber), wageType.WageTypeNumber, DbType.Decimal);
         base.GetObjectCreateData(wageType, parameters);
     }
 

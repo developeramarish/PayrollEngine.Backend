@@ -8,7 +8,6 @@ using System.Transactions;
 using System.Collections.Concurrent;
 using Task = System.Threading.Tasks.Task;
 using Npgsql;
-using NpgsqlTypes;
 using Dapper;
 using PayrollEngine.Domain.Model;
 
@@ -43,6 +42,9 @@ public class DbContext : IDbContext
     /// <summary>Routine signatures by case-insensitive routine name.</summary>
     private readonly ConcurrentDictionary<string, RoutineSignature> routineSignatures =
         new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Column types by table name, used to cast bulk insert parameters.</summary>
+    private readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> tableColumnTypes = new();
 
     /// <summary>
     /// New database connection
@@ -178,6 +180,7 @@ public class DbContext : IDbContext
 
     /// <inheritdoc />
     public string LastInsertIdSql =>
+        // ReSharper disable once RedundantStringInterpolation
         $"SELECT CAST(lastval() AS BIGINT);";
 
     /// <inheritdoc />
@@ -332,6 +335,7 @@ public class DbContext : IDbContext
 
     private static string FormatConstraintMessage(string message)
     {
+        // ReSharper disable once GrammarMistakeInComment
         // PostgreSQL: "update or delete on table \"table\" violates foreign key constraint \"fk_name\" on table \"detail\""
         var match = Regex.Match(message, @"on table ""(?<table>[^""]+)""");
         return match.Success
@@ -403,17 +407,6 @@ public class DbContext : IDbContext
         using var lease = LeaseConnection();
         (sql, commandType) = await BuildRoutineCallAsync(lease.Connection, sql, param, commandType);
         return await lease.Connection.ExecuteScalarAsync<T>(sql, param,
-            commandTimeout: commandTimeout ?? DefaultCommendTimeout,
-            commandType: commandType);
-    }
-
-    /// <inheritdoc />
-    public async Task ExecuteNonQueryAsync(string sql, object param = null,
-        int? commandTimeout = null, CommandType? commandType = null)
-    {
-        using var lease = LeaseConnection();
-        (sql, commandType) = await BuildRoutineCallAsync(lease.Connection, sql, param, commandType);
-        await lease.Connection.ExecuteAsync(sql, param,
             commandTimeout: commandTimeout ?? DefaultCommendTimeout,
             commandType: commandType);
     }
@@ -538,6 +531,25 @@ public class DbContext : IDbContext
             return;
         }
 
+        var transaction = Transaction.Current;
+        if (transaction != null)
+        {
+            var connection = GetOrCreateScopedConnection(transaction);
+            await BulkInsertAsync(connection, dataTable);
+        }
+        else
+        {
+            await using var connection = NewNpgsqlConnection();
+            await connection.OpenAsync();
+            await using var dbTransaction = await connection.BeginTransactionAsync();
+            await BulkInsertAsync(connection, dataTable);
+            await dbTransaction.CommitAsync();
+        }
+    }
+
+    /// <summary>Insert the data table rows using batched multi-row INSERT statements</summary>
+    private async Task BulkInsertAsync(NpgsqlConnection connection, DataTable dataTable)
+    {
         // PostgreSQL COPY is the fastest bulk-insert path but requires server-side file access.
         // Use multi-row INSERT with batched values — practical for cross-platform compat.
         var table = $"\"{dataTable.TableName}\"";
@@ -549,66 +561,65 @@ public class DbContext : IDbContext
             .ToList();
         var colList = string.Join(",", cols.Select(c => $"\"{c.ColumnName}\""));
 
-        var transaction = Transaction.Current;
-        if (transaction != null)
+        // untyped parameters (e.g. null values) are sent as text and require a cast to the column type
+        var columnTypes = await GetColumnTypesAsync(connection, dataTable.TableName);
+
+        for (var offset = 0; offset < rows.Count; offset += batchSize)
         {
-            var connection = GetOrCreateScopedConnection(transaction);
-            for (var offset = 0; offset < rows.Count; offset += batchSize)
+            var batch = rows.Skip(offset).Take(batchSize).ToList();
+            var valuesClauses = new List<string>(batch.Count);
+            var batchParams = new DynamicParameters();
+
+            for (var r = 0; r < batch.Count; r++)
             {
-                var batch = rows.Skip(offset).Take(batchSize).ToList();
-                var valuesClauses = new List<string>(batch.Count);
-                var batchParams = new DynamicParameters();
-
-                for (var r = 0; r < batch.Count; r++)
+                var ri = r;
+                var row = batch[ri];
+                var placeholders = cols.Select(c =>
                 {
-                    var ri = r;
-                    var row = batch[ri];
-                    var placeholders = cols.Select(c => $"@p{ri}_{c.ColumnName.Replace(" ", "_")}");
-                    valuesClauses.Add($"({string.Join(",", placeholders)})");
-                    foreach (var col in cols)
-                    {
-                        batchParams.Add($"@p{ri}_{col.ColumnName.Replace(" ", "_")}",
-                            row[col] == DBNull.Value ? null : row[col]);
-                    }
-                }
-
-                var batchSql = $"INSERT INTO {table} ({colList}) VALUES {string.Join(",", valuesClauses)}";
-                await connection.ExecuteAsync(batchSql, batchParams,
-                    commandTimeout: DefaultCommendTimeout);
-            }
-        }
-        else
-        {
-            await using var connection = NewNpgsqlConnection();
-            await connection.OpenAsync();
-            await using var dbTransaction = await connection.BeginTransactionAsync();
-
-            for (var offset = 0; offset < rows.Count; offset += batchSize)
-            {
-                var batch = rows.Skip(offset).Take(batchSize).ToList();
-                var valuesClauses = new List<string>(batch.Count);
-                var batchParams = new DynamicParameters();
-
-                for (var r = 0; r < batch.Count; r++)
+                    var placeholder = $"@p{ri}_{c.ColumnName.Replace(" ", "_")}";
+                    return columnTypes.TryGetValue(c.ColumnName, out var type)
+                        ? $"{placeholder}::{type}"
+                        : placeholder;
+                });
+                valuesClauses.Add($"({string.Join(",", placeholders)})");
+                foreach (var col in cols)
                 {
-                    var ri = r;
-                    var row = batch[ri];
-                    var placeholders = cols.Select(c => $"@p{ri}_{c.ColumnName.Replace(" ", "_")}");
-                    valuesClauses.Add($"({string.Join(",", placeholders)})");
-                    foreach (var col in cols)
-                    {
-                        batchParams.Add($"@p{ri}_{col.ColumnName.Replace(" ", "_")}",
-                            row[col] == DBNull.Value ? null : row[col]);
-                    }
+                    batchParams.Add($"@p{ri}_{col.ColumnName.Replace(" ", "_")}",
+                        row[col] == DBNull.Value ? null : row[col]);
                 }
-
-                var batchSql = $"INSERT INTO {table} ({colList}) VALUES {string.Join(",", valuesClauses)}";
-                await connection.ExecuteAsync(batchSql, batchParams,
-                    commandTimeout: DefaultCommendTimeout);
             }
 
-            await dbTransaction.CommitAsync();
+            var batchSql = $"INSERT INTO {table} ({colList}) VALUES {string.Join(",", valuesClauses)}";
+            await connection.ExecuteAsync(batchSql, batchParams,
+                commandTimeout: DefaultCommendTimeout);
         }
+    }
+
+    /// <summary>Get the column types of a table from the system catalog (cached)</summary>
+    private async Task<IReadOnlyDictionary<string, string>> GetColumnTypesAsync(
+        NpgsqlConnection connection, string tableName)
+    {
+        if (tableColumnTypes.TryGetValue(tableName, out var cached))
+        {
+            return cached;
+        }
+
+        // type modifiers are omitted: length limits are enforced by the column itself
+        const string query =
+            """
+            SELECT a.attname AS "Name", format_type(a.atttypid, NULL) AS "Type"
+            FROM pg_attribute a
+            INNER JOIN pg_class c ON c.oid = a.attrelid
+            INNER JOIN pg_namespace ns ON ns.oid = c.relnamespace
+            WHERE ns.nspname = current_schema()
+              AND c.relname = @tableName
+              AND a.attnum > 0
+              AND NOT a.attisdropped
+            """;
+        var columns = await connection.QueryAsync<(string Name, string Type)>(query, new { tableName });
+        var columnTypes = columns.ToDictionary(x => x.Name, x => x.Type, StringComparer.Ordinal);
+        tableColumnTypes.TryAdd(tableName, columnTypes);
+        return columnTypes;
     }
 
     #endregion
@@ -659,6 +670,7 @@ public class DbContext : IDbContext
 
     /// <summary>Lightweight connection wrapper. When <c>owned</c> is true, Dispose() closes
     /// the connection. When false (shared within TransactionScope), Dispose() is a no-op.</summary>
+    // ReSharper disable once InconsistentNaming
     private readonly record struct ConnectionLease(IDbConnection connection, bool owned) : IDisposable
     {
         internal IDbConnection Connection => connection;
