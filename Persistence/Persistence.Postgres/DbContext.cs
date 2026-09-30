@@ -85,18 +85,21 @@ public class DbContext : IDbContext
     {
         var attribute = column.RemoveAttributePrefix();
         return string.IsNullOrWhiteSpace(valueAlias)
-            ? $"(\"{column}\"->>'{attribute}') AS \"{column}\""
-            : $"(CAST(\"{column}\"->>'{attribute}' AS {valueAlias})) AS \"{column}\"";
+            ? $"(\"Attributes\"::jsonb->>'{attribute}') AS \"{column}\""
+            : $"(CAST(\"Attributes\"::jsonb->>'{attribute}' AS {valueAlias})) AS \"{column}\"";
     }
 
     /// <inheritdoc />
     /// <remarks>
+    /// JSON columns are stored as TEXT and are cast to jsonb.
+    ///
     /// Scalar array — e.g. Divisions/any(d: d eq 'HR'):
-    ///   jsonb_array_elements_text("{columnName}") jt(value)
+    ///   jsonb_array_elements_text("{columnName}"::jsonb) jt(value)
     ///   → exposes a single [value] column; matches SQL Server OPENJSON column name.
     ///
     /// Key/value object array — e.g. Attributes/any(a: a/Key eq 'K' and a/Value eq 'V'):
-    ///   jsonb_to_recordset("{columnName}") AS jt("Key" TEXT, "Value" TEXT)
+    ///   (SELECT e.obj->>'key' AS "Key", e.obj->>'value' AS "Value"
+    ///    FROM jsonb_array_elements("{columnName}"::jsonb) AS e(obj)) jt
     ///   → exposes named columns matching the lambda property names.
     ///
     /// The alias <c>jt</c> is consistent across all usages matching the MySQL convention.
@@ -105,33 +108,33 @@ public class DbContext : IDbContext
     {
         if (isScalar)
         {
-            return $"jsonb_array_elements_text(\"{columnName}\") jt(value)";
+            return $"jsonb_array_elements_text(\"{columnName}\"::jsonb) jt(value)";
         }
-        var cols = propertyNames.Select(p => $"\"{p}\" TEXT PATH '$.{p.ToLowerInvariant()}'");
-        return $"jsonb_to_recordset(\"{columnName}\") AS jt({string.Join(", ", cols)})";
+        var cols = propertyNames.Select(p => $"e.obj->>'{p.ToLowerInvariant()}' AS \"{p}\"");
+        return $"(SELECT {string.Join(", ", cols)} FROM jsonb_array_elements(\"{columnName}\"::jsonb) AS e(obj)) jt";
     }
 
     /// <inheritdoc />
     /// <remarks>
-    /// PostgreSQL uses direct JSONB operators for flat JSON objects:
+    /// PostgreSQL uses JSONB functions for flat JSON objects (TEXT column cast to jsonb).
+    /// Bindings use the SqlKata <c>?</c> placeholder, so the jsonb <c>?</c> operator is avoided.
     ///
     /// Key-only  (a/Key eq 'Dept'):
-    ///   "{col}" ? @key
+    ///   jsonb_exists("{col}"::jsonb, ?)
     ///   Checks whether the key exists in the flat JSONB object.
     ///
     /// Key+Value (a/Key eq 'Dept' and a/Value eq 'HR'):
-    ///   "{col}"->>@key = @value
+    ///   ("{col}"::jsonb->>?) = ?
     ///   Reads the value at the given key and compares it.
     ///
     /// Value-only (a/Value eq 'HR'):
-    ///   "{col}" @> jsonb_build_object(key_from_search, @value) via exhaustive search
-    ///   We approximate by using a subquery over jsonb_each.
+    ///   EXISTS (SELECT 1 FROM jsonb_each_text("{col}"::jsonb) kv WHERE kv.value = ?)
     /// </remarks>
     public (string RawSql, object[] Bindings)? BuildFlatObjectAnyWhere(
         string columnName,
         IReadOnlyList<(string Column, string Op, object Value)> conditions)
     {
-        var col = $"\"{columnName}\"";
+        var col = $"\"{columnName}\"::jsonb";
 
         string keyVal = null;
         string valueVal = null;
@@ -150,19 +153,19 @@ public class DbContext : IDbContext
 
         if (keyVal != null && valueVal != null)
         {
-            return ($"{col}->>@key = @value",
+            return ($"({col}->>?) = ?",
                 [keyVal, valueVal]);
         }
 
         if (keyVal != null)
         {
-            return ($"{col} ? @key",
+            return ($"jsonb_exists({col}, ?)",
                 [keyVal]);
         }
 
         if (valueVal != null)
         {
-            return ($"EXISTS (SELECT 1 FROM jsonb_each_text({col}) kv WHERE kv.value = @value)",
+            return ($"EXISTS (SELECT 1 FROM jsonb_each_text({col}) kv WHERE kv.value = ?)",
                 [valueVal]);
         }
 
