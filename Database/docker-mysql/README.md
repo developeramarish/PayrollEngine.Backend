@@ -6,6 +6,7 @@
 Database\docker-mysql\
   docker-compose.yml          ← Create: current schema (Create-Model.mysql.sql)
   docker-compose.update.yml   ← Update: previous release schema as migration baseline
+  Docker.Compose.*.cmd        ← Shortcut scripts (see Scripts)
 ```
 
 The init script is mounted directly from `Database\` — there are no copies to maintain.
@@ -20,6 +21,18 @@ On first start (empty volume), the container runs it via the `mysql` client
 | Update | `pe-upd` | `pe-mysql-upd` | 3307 | `History\v1.0.0\Create-Model.mysql.sql` |
 
 Each project (`-p`) gets its own volume, so both scenarios can run side by side.
+
+### Scripts
+
+| Script | Scenario | Action |
+|---|---|---|
+| `Docker.Compose.Up.cmd` | Create | Start `pe-full` |
+| `Docker.Compose.Down.cmd` | Create | Stop `pe-full` and delete its volume |
+| `Docker.Compose.Update.Up.cmd` | Update | Start `pe-upd` with the previous release schema |
+| `Docker.Compose.Update.Migrate.cmd` | Update | Apply `Update-Model.mysql.sql` to `pe-mysql-upd` |
+| `Docker.Compose.Update.Down.cmd` | Update | Stop `pe-upd` and delete its volume |
+
+The scripts can be run from any directory.
 
 ### Create — Full Setup
 
@@ -41,6 +54,8 @@ docker compose -p pe-upd -f docker-compose.yml -f docker-compose.update.yml up -
 # 3. Migrate to the current schema
 cmd /c "docker exec -i pe-mysql-upd mysql --comments -uroot -ppoc123 PayrollEngine < ..\Update-Model.mysql.sql"
 ```
+
+Step 1 and 3 are also available as `Docker.Compose.Update.Up.cmd` and `Docker.Compose.Update.Migrate.cmd`.
 
 Use `cmd /c` with `<` redirection — piping via PowerShell `Get-Content` may alter encoding.
 `--comments` keeps routine comments, matching the full setup (the container init uses it too).
