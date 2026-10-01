@@ -2,7 +2,7 @@
 -- Create-Model.mysql.sql
 -- Creates the PayrollEngine database for MySQL 8.0+ (8.4 LTS recommended).
 --
--- Schema version: 1.0.1
+-- Schema version: 1.1.0
 --
 -- Includes: CREATE DATABASE, all tables, 37 indexes, 7 functions, 44 stored procedures
 --
@@ -4972,6 +4972,6 @@ DELIMITER ;
 -- =============================================================================
 
 INSERT INTO `Version` (Created, MajorVersion, MinorVersion, SubVersion, Owner, Description)
-VALUES (NOW(6), 1, 0, 1, CURRENT_USER(), 'Payroll Engine: Full setup v1.0.1 (MySQL)');
+VALUES (NOW(6), 1, 1, 0, CURRENT_USER(), 'Payroll Engine: Full setup v1.1.0 (MySQL)');
 
-SELECT 'PayrollEngine MySQL schema v1.0.1 created successfully.' AS Result;
+SELECT 'PayrollEngine MySQL schema v1.1.0 created successfully.' AS Result;

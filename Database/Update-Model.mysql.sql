@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Update-Model.mysql.sql
--- Migration: PayrollEngine v1.0.0 → v1.0.1 (MySQL)
+-- Migration: PayrollEngine v1.0.0 → v1.1.0 (MySQL)
 -- =============================================================================
 
 -- =============================================================================
@@ -1656,6 +1656,6 @@ DELIMITER ;
 -- =============================================================================
 
 INSERT INTO `Version` (Created, MajorVersion, MinorVersion, SubVersion, Owner, Description)
-VALUES (NOW(6), 1, 0, 1, CURRENT_USER(), 'Payroll Engine: Migration v1.0.0 -> v1.0.1 (MySQL)');
+VALUES (NOW(6), 1, 1, 0, CURRENT_USER(), 'Payroll Engine: Migration v1.0.0 -> v1.1.0 (MySQL)');
 
-SELECT CONCAT('PayrollEngine MySQL schema updated to v1.0.1 successfully.') AS Result;
+SELECT CONCAT('PayrollEngine MySQL schema updated to v1.1.0 successfully.') AS Result;

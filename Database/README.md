@@ -13,11 +13,11 @@ The provider is selected with `PayrollServerConfiguration:DbProvider` in the Bac
 |------------|-----------------------|-----------------|--------------------------|--------------------------|
 | SQL Server | `SqlServer` (default) | 2019, Azure SQL | `Create-Model.sql`       | `Update-Model.sql`       |
 | MySQL      | `MySql`               | 8.0 (8.4 LTS)   | `Create-Model.mysql.sql` | `Update-Model.mysql.sql` |
-| PostgreSQL | `Postgres`            | 14              | `Create-Model.pg.sql`    | — (first release 1.0.1)  |
+| PostgreSQL | `Postgres`            | 14              | `Create-Model.pg.sql`    | — (first release 1.1.0)  |
 
 ## Schema Version
 
-Current schema version: **1.0.1**
+Current schema version: **1.1.0**
 
 The schema version is stored in the `Version` table. On startup, the Backend verifies:
 
@@ -295,18 +295,18 @@ cd PayrollEngine.Backend\Database
 #    test the migration against the previous release (see docker-mysql/README.md)
 
 # 3. After release: snapshot into History
-mkdir History\v1.0.1
-copy Create-Model.sql        History\v1.0.1\
-copy Update-Model.sql        History\v1.0.1\
-copy Drop-Model.sql          History\v1.0.1\
-copy Create-Model.mysql.sql  History\v1.0.1\
-copy Update-Model.mysql.sql  History\v1.0.1\
-copy Drop-Model.mysql.sql    History\v1.0.1\
-copy Create-Model.pg.sql     History\v1.0.1\
-copy DbVersion.json          History\v1.0.1\
+mkdir History\v1.1.0
+copy Create-Model.sql        History\v1.1.0\
+copy Update-Model.sql        History\v1.1.0\
+copy Drop-Model.sql          History\v1.1.0\
+copy Create-Model.mysql.sql  History\v1.1.0\
+copy Update-Model.mysql.sql  History\v1.1.0\
+copy Drop-Model.mysql.sql    History\v1.1.0\
+copy Create-Model.pg.sql     History\v1.1.0\
+copy DbVersion.json          History\v1.1.0\
 
 # 4. Advance DbVersion.json for next cycle
-#    OldVersion = "1.0.1", NewVersion = "1.0.2"
+#    OldVersion = "1.1.0", NewVersion = "1.1.1"
 ```
 
 ## Docker
@@ -469,7 +469,7 @@ With `DbProvider=Postgres`, the Backend enables the Npgsql switch
 The database itself is not created by the script — create it beforehand with the required
 locale (the Docker setup does this via `POSTGRES_DB` and `POSTGRES_INITDB_ARGS`).
 
-PostgreSQL support starts with schema version 1.0.1. An update script and a history snapshot
+PostgreSQL support starts with schema version 1.1.0. An update script and a history snapshot
 will be provided from the next release onwards.
 
 ### SQL Source Files
@@ -498,7 +498,7 @@ SELECT "MajorVersion", "MinorVersion", "SubVersion"
 FROM "Version" ORDER BY "Id" DESC LIMIT 1;
 ```
 
-Expected: 65 tables, 40 functions and 11 procedures (PostgreSQL routine types), version 1.0.1.
+Expected: 65 tables, 40 functions and 11 procedures (PostgreSQL routine types), version 1.1.0.
 
 ## Docker
 

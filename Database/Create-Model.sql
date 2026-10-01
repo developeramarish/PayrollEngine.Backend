@@ -10237,16 +10237,16 @@ INSERT INTO dbo.[Version] (
     [Description] )
 VALUES (
     1,
-    0,
     1,
+    0,
     CURRENT_USER,
-    'Payroll Engine: Full setup v1.0.1' )
+    'Payroll Engine: Full setup v1.1.0' )
 SET @errorID = @@ERROR
 IF ( @errorID <> 0 ) BEGIN
     PRINT 'Error while updating the Payroll Engine database version.'
 END
 ELSE BEGIN
-    PRINT 'Payroll Engine database version successfully updated to release 1.0.0'
+    PRINT 'Payroll Engine database version successfully updated to release 1.1.0'
 END
 GO
 

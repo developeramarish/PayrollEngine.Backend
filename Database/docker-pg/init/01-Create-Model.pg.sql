@@ -1,7 +1,7 @@
 -- =============================================================================
 -- Create-Model.pg.sql
 -- PostgreSQL schema for PayrollEngine 14+ (16 LTS recommended).
--- Schema version: 1.0.1
+-- Schema version: 1.1.0
 -- NOTE: All table names are double-quoted for C# SqlKata compatibility.
 -- =============================================================================
 
@@ -5092,4 +5092,4 @@ $$;
 -- =============================================================================
 
 INSERT INTO "Version" ("Created", "MajorVersion", "MinorVersion", "SubVersion", "Owner", "Description")
-VALUES (NOW(), 1, 0, 1, CURRENT_USER, 'Payroll Engine: Full setup v1.0.1 (PostgreSQL)');
+VALUES (NOW(), 1, 1, 0, CURRENT_USER, 'Payroll Engine: Full setup v1.1.0 (PostgreSQL)');
